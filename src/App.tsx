@@ -89,7 +89,7 @@ function App() {
   const conditionsRef = useStaggerReveal()
   const timetableRef = useStaggerReveal()
   const noticeRef = useStaggerReveal()
-  const qnaRef = useStaggerReveal()
+  const qnaRef = useReveal()
   const contactRef = useReveal()
 
   // Hero entrance animation
@@ -378,9 +378,9 @@ function App() {
         <p className="section-subtitle">자주 묻는 질문</p>
         <div className="divider" />
 
-        <div className="qna-list" ref={qnaRef}>
+        <div className="qna-list reveal-section" ref={qnaRef}>
           {QNA_DATA.map((item, i) => (
-            <div key={i} className={`qna-item stagger-child ${openQna === i ? 'open' : ''}`}>
+            <div key={i} className={`qna-item ${openQna === i ? 'open' : ''}`}>
               <button className="qna-question" onClick={() => setOpenQna(openQna === i ? null : i)}>
                 <div><span>Q.</span>{item.q}</div>
                 <span className="qna-toggle">&#x25BC;</span>
