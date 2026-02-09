@@ -1,5 +1,5 @@
-// Supabase Edge Function: Send SMS on new registration
-// Triggered via Database Webhook on registrations table INSERT
+// Supabase Edge Function: Send SMS on admin approval
+// Called manually from admin page when approving a registration
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { crypto } from 'https://deno.land/std@0.208.0/crypto/mod.ts'
@@ -11,10 +11,10 @@ const SOLAPI_SENDER = Deno.env.get('SOLAPI_SENDER_PHONE')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-interface Registration {
-  id: string
-  name: string
+interface SmsRequest {
   phone: string
+  message: string
+  registrationId: string
 }
 
 // Solapi HMAC-SHA256 인증 헤더 생성
@@ -35,20 +35,34 @@ async function getSolapiAuthHeader(): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  try {
-    const { record } = await req.json() as { record: Registration }
-    const { id, name, phone } = record
+  // CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      },
+    })
+  }
 
-    // 입금 안내 메시지 (실제 계좌정보로 수정 필요)
-    const message =
-      `[GILMO'S PEOPLE] ${name}님, 파티 신청이 접수되었습니다.\n\n` +
-      `입금 안내:\n` +
-      `- 계좌: [은행명] [계좌번호]\n` +
-      `- 금액: [금액]원\n` +
-      `- 예금주: [예금주명]\n\n` +
-      `입금 확인 후 최종 승인 문자를 보내드립니다.`
+  try {
+    const { phone, message, registrationId } = await req.json() as SmsRequest
+
+    if (!phone || !message) {
+      return new Response(JSON.stringify({ error: 'phone and message are required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+
+    // 전화번호에서 숫자만 추출
+    const cleanPhone = phone.replace(/\D/g, '')
 
     const authHeader = await getSolapiAuthHeader()
+
+    // SMS 타입 결정: 90자 이하 SMS, 초과 LMS
+    const smsType = message.length > 90 ? 'LMS' : 'SMS'
 
     const smsResponse = await fetch('https://api.solapi.com/messages/v4/send-many/detail', {
       method: 'POST',
@@ -58,10 +72,10 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         messages: [{
-          to: phone,
+          to: cleanPhone,
           from: SOLAPI_SENDER,
           text: message,
-          type: 'LMS',
+          type: smsType,
         }],
       }),
     })
@@ -70,20 +84,22 @@ Deno.serve(async (req) => {
     console.log('SMS result:', JSON.stringify(smsResult))
 
     // DB에 발송 완료 기록
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-    await supabase.from('registrations').update({
-      sms_sent: true,
-      sms_sent_at: new Date().toISOString(),
-    }).eq('id', id)
+    if (registrationId) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+      await supabase.from('registrations').update({
+        sms_sent: true,
+        sms_sent_at: new Date().toISOString(),
+      }).eq('id', registrationId)
+    }
 
     return new Response(JSON.stringify({ success: true, smsResult }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     })
   } catch (error) {
     console.error('SMS send failed:', error)
     return new Response(JSON.stringify({ error: String(error) }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     })
   }
 })

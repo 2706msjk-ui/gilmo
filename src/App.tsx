@@ -566,7 +566,7 @@ function App() {
                 <div className="form-success-icon">&#x2714;</div>
                 <h2 className="form-success-title">신청이 완료되었습니다!</h2>
                 <p className="form-success-message">
-                  입금 안내 문자가 곧 발송됩니다.<br />
+                  관리자 확인 후 입금 안내 문자가 발송됩니다.<br />
                   문자가 오지 않을 경우 문의처로 연락해주세요.
                 </p>
                 <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
