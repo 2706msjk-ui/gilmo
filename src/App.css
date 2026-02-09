@@ -851,6 +851,153 @@
   }
 }
 
+/* ===== ANIMATIONS ===== */
+
+/* Hero entrance */
+.hero-anim {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: none;
+}
+
+.hero-loaded .hero-anim {
+  animation: heroFadeUp 0.8s ease forwards;
+}
+
+@keyframes heroFadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Override bounce for hero-scroll after entrance */
+.hero-loaded .hero-scroll.hero-anim {
+  animation: heroFadeUp 0.8s ease forwards, bounce 2s 1.5s infinite;
+}
+
+/* Floating particles */
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  animation: particleFloat linear infinite;
+}
+
+.particle:nth-child(odd) {
+  width: 2px;
+  height: 2px;
+  background: var(--accent-light);
+}
+
+@keyframes particleFloat {
+  0% { opacity: 0; transform: translateY(0) scale(1); }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.2; }
+  100% { opacity: 0; transform: translateY(-100vh) scale(0); }
+}
+
+/* Scroll reveal - section level */
+.reveal-section {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal-section.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children */
+.stagger-child {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.stagger-child.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Badge pulse for open events */
+.event-badge.open {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,165,90,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(201,165,90,0); }
+}
+
+/* Timeline dot glow */
+.timeline-dot {
+  animation: dotGlow 2s ease-in-out infinite;
+}
+
+@keyframes dotGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,165,90,0.4); }
+  50% { box-shadow: 0 0 12px 4px rgba(201,165,90,0.2); }
+}
+
+/* Apply button pulse */
+.apply-btn-fixed {
+  animation: applyPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes applyPulse {
+  0%, 100% { box-shadow: 0 4px 24px rgba(201,165,90,0.3); }
+  50% { box-shadow: 0 4px 32px rgba(201,165,90,0.5); }
+}
+
+/* Calendar day hover */
+.calendar-day.has-event:hover {
+  background: rgba(201,165,90,0.15);
+  transform: scale(1.1);
+}
+
+/* Intro card icon float */
+.intro-card-icon {
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Divider shimmer */
+.divider {
+  position: relative;
+  overflow: hidden;
+}
+
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-light), transparent);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
 /* ===== BOTTOM SPACER for fixed button ===== */
 .bottom-spacer {
   height: 80px;

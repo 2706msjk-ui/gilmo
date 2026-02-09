@@ -1,5 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import './App.css'
+
+// ===== Scroll Reveal Hook =====
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('revealed'); observer.unobserve(el) } },
+      { threshold: 0.15 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
+
+// ===== Stagger Reveal Hook =====
+function useStaggerReveal() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          const children = el.querySelectorAll('.stagger-child')
+          children.forEach((child, i) => {
+            setTimeout(() => child.classList.add('revealed'), i * 120)
+          })
+          observer.unobserve(el)
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
 
 // ===== Calendar Helper =====
 function getCalendarDays(year: number, month: number) {
@@ -37,9 +77,35 @@ function App() {
   const [calMonth, setCalMonth] = useState(today.getMonth())
   const [openQna, setOpenQna] = useState<number | null>(null)
   const [modal, setModal] = useState<'terms' | 'privacy' | null>(null)
+  const [heroLoaded, setHeroLoaded] = useState(false)
 
   const days = getCalendarDays(calYear, calMonth)
   const dayLabels = ['일', '월', '화', '수', '목', '금', '토']
+
+  // Scroll reveal refs
+  const scheduleRef = useReveal()
+  const introRef = useStaggerReveal()
+  const detailsRef = useReveal()
+  const conditionsRef = useStaggerReveal()
+  const timetableRef = useStaggerReveal()
+  const noticeRef = useStaggerReveal()
+  const qnaRef = useStaggerReveal()
+  const contactRef = useReveal()
+
+  // Hero entrance animation
+  useEffect(() => { const t = setTimeout(() => setHeroLoaded(true), 100); return () => clearTimeout(t) }, [])
+
+  // Parallax on hero
+  const heroRef = useRef<HTMLElement>(null)
+  const onScroll = useCallback(() => {
+    if (!heroRef.current) return
+    const y = window.scrollY
+    heroRef.current.style.backgroundPositionY = `${y * 0.4}px`
+  }, [])
+  useEffect(() => {
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [onScroll])
 
   const prevMonth = () => {
     if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11) }
@@ -54,18 +120,27 @@ function App() {
     <div className="app">
 
       {/* ===== 1. HERO / THEME ===== */}
-      <section className="hero" id="top">
-        <p className="hero-tagline">PREMIUM SOCIAL GATHERING</p>
-        <h1 className="hero-brand">GILMO'S PEOPLE</h1>
-        <p className="hero-description">
+      <section className={`hero ${heroLoaded ? 'hero-loaded' : ''}`} id="top" ref={heroRef}>
+        <div className="hero-particles">
+          {Array.from({ length: 20 }, (_, i) => (
+            <span key={i} className="particle" style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 6}s`,
+              animationDuration: `${4 + Math.random() * 4}s`,
+            }} />
+          ))}
+        </div>
+        <p className="hero-tagline hero-anim" style={{ animationDelay: '0.2s' }}>PREMIUM SOCIAL GATHERING</p>
+        <h1 className="hero-brand hero-anim" style={{ animationDelay: '0.5s' }}>GILMO'S PEOPLE</h1>
+        <p className="hero-description hero-anim" style={{ animationDelay: '0.8s' }}>
           당신의 설렘이 시작되는 곳<br />
           엄선된 사람들과 함께하는 특별한 밤
         </p>
-        <div className="hero-scroll">SCROLL</div>
+        <div className="hero-scroll hero-anim" style={{ animationDelay: '1.2s' }}>SCROLL</div>
       </section>
 
       {/* ===== 2. SCHEDULE ===== */}
-      <section className="schedule" id="schedule">
+      <section className="schedule reveal-section" id="schedule" ref={scheduleRef}>
         <h2 className="section-title">Schedule</h2>
         <p className="section-subtitle">파티 일정 및 참석 현황</p>
 
@@ -146,18 +221,18 @@ function App() {
         <p className="section-subtitle">GILMO'S PEOPLE은 이런 파티입니다</p>
         <div className="divider" />
 
-        <div className="intro-cards">
-          <div className="intro-card">
+        <div className="intro-cards" ref={introRef}>
+          <div className="intro-card stagger-child">
             <div className="intro-card-icon">&#x2728;</div>
             <h3>감각적인 공간과 분위기</h3>
             <p>세련된 인테리어와 감각적인 조명이 만드는 특별한 공간에서 잊지 못할 밤을 선사합니다.</p>
           </div>
-          <div className="intro-card">
+          <div className="intro-card stagger-child">
             <div className="intro-card-icon">&#x1F91D;</div>
             <h3>자연스러운 만남</h3>
             <p>어색함 없이 자연스럽게 어울릴 수 있는 다양한 프로그램과 컨텐츠로 새로운 인연을 만들어보세요.</p>
           </div>
-          <div className="intro-card">
+          <div className="intro-card stagger-child">
             <div className="intro-card-icon">&#x1F3A4;</div>
             <h3>전문 MC 진행</h3>
             <p>경험 많은 전문 MC의 진행으로 처음 오시는 분들도 편하게 즐기실 수 있습니다.</p>
@@ -166,7 +241,7 @@ function App() {
       </section>
 
       {/* ===== 4-2. DETAILS ===== */}
-      <section className="section details" id="details">
+      <section className="section details reveal-section" id="details" ref={detailsRef}>
         <h2 className="section-title">Details</h2>
         <p className="section-subtitle">파티 제공 내용</p>
         <div className="divider" />
@@ -209,16 +284,16 @@ function App() {
         <p className="section-subtitle">이런 분들에게 추천해요!</p>
         <div className="divider" />
 
-        <div className="condition-cards">
-          <div className="condition-card">
+        <div className="condition-cards" ref={conditionsRef}>
+          <div className="condition-card stagger-child">
             <div className="condition-number">01</div>
             <h4>새로운 인연을<br />만들고 싶은 솔로!</h4>
           </div>
-          <div className="condition-card">
+          <div className="condition-card stagger-child">
             <div className="condition-number">02</div>
             <h4>하루를 마치고<br />설레고 싶은 누구나</h4>
           </div>
-          <div className="condition-card">
+          <div className="condition-card stagger-child">
             <div className="condition-number">03</div>
             <h4>혼자라도 편하게<br />다양한 프로그램 구성</h4>
           </div>
@@ -242,26 +317,26 @@ function App() {
         <p className="section-subtitle">파티 진행 순서</p>
         <div className="divider" />
 
-        <div className="timeline">
-          <div className="timeline-item">
+        <div className="timeline" ref={timetableRef}>
+          <div className="timeline-item stagger-child">
             <div className="timeline-dot" />
             <div className="timeline-time">20:30</div>
             <div className="timeline-title">파티 시작</div>
             <div className="timeline-desc">8시 10분부터 입장 가능합니다.</div>
           </div>
-          <div className="timeline-item">
+          <div className="timeline-item stagger-child">
             <div className="timeline-dot" />
             <div className="timeline-time">22:30</div>
             <div className="timeline-title">1부 컨텐츠 종료</div>
             <div className="timeline-desc">1부만 예약하셔도 현장 결제 가능합니다.</div>
           </div>
-          <div className="timeline-item">
+          <div className="timeline-item stagger-child">
             <div className="timeline-dot" />
             <div className="timeline-time">23:30</div>
             <div className="timeline-title">2부 파티 시작</div>
             <div className="timeline-desc">본 파티와 같은 장소에서 진행됩니다.</div>
           </div>
-          <div className="timeline-item">
+          <div className="timeline-item stagger-child">
             <div className="timeline-dot" />
             <div className="timeline-time">02:00</div>
             <div className="timeline-title">파티 종료</div>
@@ -276,17 +351,17 @@ function App() {
         <p className="section-subtitle">유의사항</p>
         <div className="divider" />
 
-        <div className="notice-list">
-          <div className="notice-item">
+        <div className="notice-list" ref={noticeRef}>
+          <div className="notice-item stagger-child">
             <strong>01.</strong> 시간 약속을 지켜주세요! 진행 시간에 맞춰 정시 입장을 부탁드립니다.
           </div>
-          <div className="notice-item">
+          <div className="notice-item stagger-child">
             <strong>02.</strong> 성비 / 연령대 등 기타 사유로 인해 승인이 늦어 질 수 있습니다.
           </div>
-          <div className="notice-item">
+          <div className="notice-item stagger-child">
             <strong>03.</strong> 행사 중 편의를 위해 간단한 다과, 음료와 주류가 무상으로 비치되어 있습니다. 참가비는 장소 대관 및 프로그램 운영비에 사용되며, 음식과 주류는 별도 비용 없이 제공됩니다.
           </div>
-          <div className="notice-item">
+          <div className="notice-item stagger-child">
             <strong>04.</strong> 과한 스킨십, 불쾌한 언행 사용 시 <span className="warning">강제 퇴장</span>입니다. 이 때 참가비 환불은 <span className="warning">불가</span>합니다.
           </div>
         </div>
@@ -303,9 +378,9 @@ function App() {
         <p className="section-subtitle">자주 묻는 질문</p>
         <div className="divider" />
 
-        <div className="qna-list">
+        <div className="qna-list" ref={qnaRef}>
           {QNA_DATA.map((item, i) => (
-            <div key={i} className={`qna-item ${openQna === i ? 'open' : ''}`}>
+            <div key={i} className={`qna-item stagger-child ${openQna === i ? 'open' : ''}`}>
               <button className="qna-question" onClick={() => setOpenQna(openQna === i ? null : i)}>
                 <div><span>Q.</span>{item.q}</div>
                 <span className="qna-toggle">&#x25BC;</span>
@@ -319,7 +394,7 @@ function App() {
       </section>
 
       {/* ===== 8. CONTACT ===== */}
-      <section className="section contact" id="contact">
+      <section className="section contact reveal-section" id="contact" ref={contactRef}>
         <h2 className="section-title">Contact</h2>
         <p className="section-subtitle">문의처</p>
         <div className="divider" />
