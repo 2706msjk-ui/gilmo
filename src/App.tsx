@@ -149,9 +149,10 @@ function App() {
       ])
 
       const ts = Date.now()
+      const ext = (f: File) => f.name.split('.').pop() || 'jpg'
       const [bodyUp, faceUp] = await Promise.all([
-        supabase.storage.from('registrations').upload(`${ts}_body_${compBody.name}`, compBody),
-        supabase.storage.from('registrations').upload(`${ts}_face_${compFace.name}`, compFace),
+        supabase.storage.from('registrations').upload(`${ts}_body.${ext(compBody)}`, compBody),
+        supabase.storage.from('registrations').upload(`${ts}_face.${ext(compFace)}`, compFace),
       ])
       if (bodyUp.error) throw bodyUp.error
       if (faceUp.error) throw faceUp.error
@@ -173,9 +174,10 @@ function App() {
       })
       if (error) throw error
       setSubmitSuccess(true)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration failed:', err)
-      setFormErrors({ submit: '신청 중 오류가 발생했습니다. 다시 시도해주세요.' })
+      const detail = err?.message || err?.error_description || String(err)
+      setFormErrors({ submit: `오류: ${detail}` })
     } finally {
       setSubmitting(false)
     }

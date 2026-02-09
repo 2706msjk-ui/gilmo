@@ -341,11 +341,18 @@
             <p class="sms-to">${escHtml(smsModal.name)} (${formatPhone(smsModal.phone)})</p>
             <textarea id="sms-textarea" oninput="updateSmsText(this.value)">${escHtml(smsText)}</textarea>
             <div class="char-count">${smsText.length}자 ${smsText.length > 90 ? '(LMS)' : '(SMS)'}</div>
-            <div class="modal-actions">
-              <button class="btn-cancel" onclick="closeSmsModalForce()">취소</button>
-              <button class="btn-send" onclick="sendSms()" ${smsSending ? 'disabled' : ''}>${smsSending ? '발송 중...' : '발송하기'}</button>
-            </div>
-            ${smsStatus ? `<div class="send-status ${smsStatus.type}">${escHtml(smsStatus.message)}</div>` : ''}
+            ${smsStatus && smsStatus.type === 'success' ? `
+              <div class="send-status success">${escHtml(smsStatus.message)}</div>
+              <div class="modal-actions">
+                <button class="btn-send" onclick="closeSmsModalForce()">닫기</button>
+              </div>
+            ` : `
+              <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeSmsModalForce()">취소</button>
+                <button class="btn-send" onclick="sendSms()" ${smsSending ? 'disabled' : ''}>${smsSending ? '발송 중...' : '발송하기'}</button>
+              </div>
+              ${smsStatus ? `<div class="send-status ${smsStatus.type}">${escHtml(smsStatus.message)}</div>` : ''}
+            `}
           </div>
         </div>
       `
