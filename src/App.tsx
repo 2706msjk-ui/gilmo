@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import imageCompression from 'browser-image-compression'
+import { supabase } from './supabase'
 import './App.css'
+
+// ===== Phone Formatter =====
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}
 
 // ===== Scroll Reveal Hook =====
 function useReveal() {
@@ -69,15 +79,107 @@ const QNA_DATA = [
   { q: '드레스코드가 있나요?', a: '특별한 드레스코드는 없지만, 파티 분위기에 맞는 세미캐주얼 ~ 스마트캐주얼 복장을 권장합니다.' },
 ]
 
-const NAVER_FORM_URL = '#' // TODO: 네이버폼 URL로 교체
-
 function App() {
   const today = new Date()
   const [calYear, setCalYear] = useState(today.getFullYear())
   const [calMonth, setCalMonth] = useState(today.getMonth())
   const [openQna, setOpenQna] = useState<number | null>(null)
-  const [modal, setModal] = useState<'terms' | 'privacy' | null>(null)
+  const [modal, setModal] = useState<'terms' | 'privacy' | 'registration' | null>(null)
   const [heroLoaded, setHeroLoaded] = useState(false)
+
+  // ===== Registration Form State =====
+  const [formData, setFormData] = useState({
+    name: '', birthDate: '', gender: '' as '' | 'male' | 'female',
+    phone: '', instagramId: '', noInstagram: false, height: '', weight: '',
+  })
+  const [bodyPhoto, setBodyPhoto] = useState<File | null>(null)
+  const [facePhoto, setFacePhoto] = useState<File | null>(null)
+  const [bodyPreview, setBodyPreview] = useState('')
+  const [facePreview, setFacePreview] = useState('')
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+
+  // Body scroll lock when modal is open
+  useEffect(() => {
+    document.body.style.overflow = modal ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [modal])
+
+  // Reset form on modal close
+  const openRegistration = () => {
+    setFormData({ name: '', birthDate: '', gender: '', phone: '', instagramId: '', noInstagram: false, height: '', weight: '' })
+    setBodyPhoto(null); setFacePhoto(null)
+    setBodyPreview(''); setFacePreview('')
+    setFormErrors({}); setSubmitSuccess(false)
+    setModal('registration')
+  }
+
+  // Form validation
+  const validateForm = () => {
+    const errors: Record<string, string> = {}
+    if (!formData.name.trim()) errors.name = '성함을 입력해주세요'
+    if (!formData.gender) errors.gender = '성별을 선택해주세요'
+    if (!formData.birthDate) errors.birthDate = '생년월일을 선택해주세요'
+    if (formData.birthDate && formData.gender) {
+      const y = parseInt(formData.birthDate.split('-')[0])
+      if (formData.gender === 'male' && (y < 1993 || y > 2006)) errors.birthDate = '남성은 93~06년생만 신청 가능합니다'
+      if (formData.gender === 'female' && (y < 1993 || y > 2007)) errors.birthDate = '여성은 93~07년생만 신청 가능합니다'
+    }
+    const phoneDigits = formData.phone.replace(/\D/g, '')
+    if (phoneDigits.length < 10) errors.phone = '올바른 연락처를 입력해주세요'
+    if (!formData.noInstagram && !formData.instagramId.trim()) errors.instagramId = '인스타 ID를 입력하거나 "없음"을 선택해주세요'
+    if (!formData.height.trim()) errors.height = '키를 입력해주세요'
+    if (!formData.weight.trim()) errors.weight = '몸무게를 입력해주세요'
+    if (!bodyPhoto) errors.bodyPhoto = '전신 사진을 업로드해주세요'
+    if (!facePhoto) errors.facePhoto = '얼굴 사진을 업로드해주세요'
+    return errors
+  }
+
+  // Form submission
+  const handleSubmit = async () => {
+    const errors = validateForm()
+    if (Object.keys(errors).length > 0) { setFormErrors(errors); return }
+    setSubmitting(true); setFormErrors({})
+
+    try {
+      const opts = { maxSizeMB: 1, maxWidthOrHeight: 1200, useWebWorker: true }
+      const [compBody, compFace] = await Promise.all([
+        imageCompression(bodyPhoto!, opts), imageCompression(facePhoto!, opts),
+      ])
+
+      const ts = Date.now()
+      const [bodyUp, faceUp] = await Promise.all([
+        supabase.storage.from('registrations').upload(`${ts}_body_${compBody.name}`, compBody),
+        supabase.storage.from('registrations').upload(`${ts}_face_${compFace.name}`, compFace),
+      ])
+      if (bodyUp.error) throw bodyUp.error
+      if (faceUp.error) throw faceUp.error
+
+      const bodyUrl = supabase.storage.from('registrations').getPublicUrl(bodyUp.data.path).data.publicUrl
+      const faceUrl = supabase.storage.from('registrations').getPublicUrl(faceUp.data.path).data.publicUrl
+
+      const { error } = await supabase.from('registrations').insert({
+        name: formData.name.trim(),
+        birth_date: formData.birthDate,
+        gender: formData.gender,
+        phone: formData.phone.replace(/\D/g, ''),
+        instagram_id: formData.noInstagram ? '없음' : formData.instagramId.trim(),
+        height: formData.height.trim(),
+        weight: formData.weight.trim(),
+        body_photo_url: bodyUrl,
+        face_photo_url: faceUrl,
+        sms_sent: false,
+      })
+      if (error) throw error
+      setSubmitSuccess(true)
+    } catch (err) {
+      console.error('Registration failed:', err)
+      setFormErrors({ submit: '신청 중 오류가 발생했습니다. 다시 시도해주세요.' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   const days = getCalendarDays(calYear, calMonth)
   const dayLabels = ['일', '월', '화', '수', '목', '금', '토']
@@ -437,30 +539,153 @@ function App() {
       <div className="bottom-spacer" />
 
       {/* ===== FIXED APPLY BUTTON ===== */}
-      <a href={NAVER_FORM_URL} target="_blank" rel="noopener noreferrer">
-        <button className="apply-btn-fixed">파티 신청하기</button>
-      </a>
+      <button className="apply-btn-fixed" onClick={openRegistration}>파티 신청하기</button>
 
       {/* ===== MODALS ===== */}
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className={`modal ${modal === 'registration' ? 'modal-form' : ''}`} onClick={e => e.stopPropagation()}>
             {modal === 'terms' ? (
               <>
                 <h2>이용약관</h2>
                 <p>제1조 (목적)<br />본 이용약관은 "GILMO'S PEOPLE"(이하 "사이트")의 서비스 이용조건과 운영에 관한 제반 사항 규정을 목적으로 합니다.</p>
                 <p>제2조 (용어의 정의)<br />본 약관에서 사용되는 주요한 용어의 정의는 다음과 같습니다.<br />- 회원: 사이트의 약관에 동의하고 개인정보를 제공하여 회원등록을 한 자로서, 사이트와의 이용계약을 체결하고 사이트를 이용하는 이용자를 말합니다.<br />- 이용계약: 사이트 이용과 관련하여 사이트와 회원간에 체결하는 계약을 말합니다.</p>
                 <p>제3조 (약관 외 준칙)<br />운영자는 필요한 경우 별도로 운영정책을 공지 안내할 수 있으며, 본 약관과 운영정책이 중첩될 경우 운영정책이 우선 적용됩니다.</p>
+                <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
               </>
-            ) : (
+            ) : modal === 'privacy' ? (
               <>
                 <h2>개인정보처리방침</h2>
                 <p>GILMO'S PEOPLE은 개인정보보호법에 따라 이용자의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 하기 위하여 다음과 같이 개인정보 처리방침을 수립·공개합니다.</p>
                 <p>1. 개인정보의 수집 및 이용목적<br />회사는 수집한 개인정보를 다음의 목적을 위해 활용합니다.<br />- 서비스 제공에 관한 계약 이행 및 서비스 제공<br />- 회원 관리: 본인확인, 개인식별, 불량회원의 부정이용 방지</p>
                 <p>2. 수집하는 개인정보의 항목<br />- 필수항목: 이름, 생년월일, 성별, 연락처, 인스타그램 ID<br />- 선택항목: 직업, 거주지역, 신체정보</p>
+                <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
+              </>
+            ) : submitSuccess ? (
+              <>
+                <div className="form-success-icon">&#x2714;</div>
+                <h2 className="form-success-title">신청이 완료되었습니다!</h2>
+                <p className="form-success-message">
+                  입금 안내 문자가 곧 발송됩니다.<br />
+                  문자가 오지 않을 경우 문의처로 연락해주세요.
+                </p>
+                <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
+              </>
+            ) : (
+              <>
+                <h2>파티 신청서</h2>
+                <p className="form-subtitle">모든 항목을 정확히 입력해주세요</p>
+
+                <div className="form-group">
+                  <label className="form-label">성함 <span className="required">*</span></label>
+                  <input type="text" className={`form-input ${formErrors.name ? 'error' : ''}`}
+                    placeholder="이름을 입력해주세요" value={formData.name}
+                    onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} />
+                  {formErrors.name && <p className="form-error">{formErrors.name}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">성별 <span className="required">*</span></label>
+                  <div className="form-radio-group">
+                    <label className={`form-radio ${formData.gender === 'male' ? 'selected' : ''}`}>
+                      <input type="radio" name="gender" checked={formData.gender === 'male'}
+                        onChange={() => setFormData(p => ({ ...p, gender: 'male' }))} />
+                      남성
+                    </label>
+                    <label className={`form-radio ${formData.gender === 'female' ? 'selected' : ''}`}>
+                      <input type="radio" name="gender" checked={formData.gender === 'female'}
+                        onChange={() => setFormData(p => ({ ...p, gender: 'female' }))} />
+                      여성
+                    </label>
+                  </div>
+                  {formErrors.gender && <p className="form-error">{formErrors.gender}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">생년월일 <span className="required">*</span></label>
+                  <input type="date" className={`form-input ${formErrors.birthDate ? 'error' : ''}`}
+                    value={formData.birthDate}
+                    onChange={e => setFormData(p => ({ ...p, birthDate: e.target.value }))} />
+                  {formErrors.birthDate && <p className="form-error">{formErrors.birthDate}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">연락처 <span className="required">*</span></label>
+                  <input type="tel" className={`form-input ${formErrors.phone ? 'error' : ''}`}
+                    placeholder="010-0000-0000" value={formData.phone}
+                    onChange={e => setFormData(p => ({ ...p, phone: formatPhone(e.target.value) }))} />
+                  {formErrors.phone && <p className="form-error">{formErrors.phone}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">인스타 ID</label>
+                  <div className="form-insta-row">
+                    <input type="text" className={`form-input ${formErrors.instagramId ? 'error' : ''}`}
+                      placeholder="@username" value={formData.instagramId} disabled={formData.noInstagram}
+                      onChange={e => setFormData(p => ({ ...p, instagramId: e.target.value }))} />
+                    <label className="form-checkbox">
+                      <input type="checkbox" checked={formData.noInstagram}
+                        onChange={e => setFormData(p => ({ ...p, noInstagram: e.target.checked, instagramId: '' }))} />
+                      없음
+                    </label>
+                  </div>
+                  {formErrors.instagramId && <p className="form-error">{formErrors.instagramId}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">신체정보 <span className="required">*</span></label>
+                  <div className="form-body-row">
+                    <div className="form-body-field">
+                      <input type="number" className={`form-input ${formErrors.height ? 'error' : ''}`}
+                        placeholder="키" value={formData.height}
+                        onChange={e => setFormData(p => ({ ...p, height: e.target.value }))} />
+                      <span className="form-unit">cm</span>
+                    </div>
+                    <div className="form-body-field">
+                      <input type="number" className={`form-input ${formErrors.weight ? 'error' : ''}`}
+                        placeholder="몸무게" value={formData.weight}
+                        onChange={e => setFormData(p => ({ ...p, weight: e.target.value }))} />
+                      <span className="form-unit">kg</span>
+                    </div>
+                  </div>
+                  {(formErrors.height || formErrors.weight) && <p className="form-error">{formErrors.height || formErrors.weight}</p>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">심사용 사진 <span className="required">*</span></label>
+                  <p className="form-hint">전신 1장 + 얼굴 1장 (각 10MB 이하)</p>
+                  <div className="form-photo-row">
+                    <div className="form-photo-upload">
+                      <label className={`form-photo-label ${formErrors.bodyPhoto ? 'error' : ''}`}>
+                        {bodyPreview
+                          ? <img src={bodyPreview} alt="전신" />
+                          : <><span className="photo-icon">&#x1F4F7;</span><span>전신 사진</span></>}
+                        <input type="file" accept="image/*" className="form-file-input"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) { setBodyPhoto(f); setBodyPreview(URL.createObjectURL(f)) } }} />
+                      </label>
+                      {formErrors.bodyPhoto && <p className="form-error">{formErrors.bodyPhoto}</p>}
+                    </div>
+                    <div className="form-photo-upload">
+                      <label className={`form-photo-label ${formErrors.facePhoto ? 'error' : ''}`}>
+                        {facePreview
+                          ? <img src={facePreview} alt="얼굴" />
+                          : <><span className="photo-icon">&#x1F4F7;</span><span>얼굴 사진</span></>}
+                        <input type="file" accept="image/*" className="form-file-input"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) { setFacePhoto(f); setFacePreview(URL.createObjectURL(f)) } }} />
+                      </label>
+                      {formErrors.facePhoto && <p className="form-error">{formErrors.facePhoto}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {formErrors.submit && <p className="form-error form-submit-error">{formErrors.submit}</p>}
+
+                <button className="form-submit-btn" onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? '신청 중...' : '신청하기'}
+                </button>
+                <button className="modal-close" onClick={() => setModal(null)}>취소</button>
               </>
             )}
-            <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
           </div>
         </div>
       )}
