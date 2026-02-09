@@ -13,10 +13,10 @@ function getCalendarDays(year: number, month: number) {
 
 // ===== Sample Data =====
 const EVENTS = [
-  { date: '2.14(금) ~ 2.15(토)', label: '2월 14일', status: 'open' as const, detail: '잔여좌석 남12 여8' },
-  { date: '2.21(금) ~ 2.22(토)', label: '2월 21일', status: 'open' as const, detail: '잔여좌석 남20 여15' },
-  { date: '2.28(금) ~ 3.1(토)', label: '2월 28일', status: 'open' as const, detail: '잔여좌석 남25 여20' },
-  { date: '2.7(금) ~ 2.8(토)', label: '2월 7일', status: 'closed' as const, detail: '잔여좌석 남0 여0' },
+  { date: '2.14(금) ~ 2.15(토)', label: '2월 14일', status: 'open' as const, male: { current: 12, max: 24 }, female: { current: 16, max: 24 } },
+  { date: '2.21(금) ~ 2.22(토)', label: '2월 21일', status: 'open' as const, male: { current: 4, max: 24 }, female: { current: 9, max: 24 } },
+  { date: '2.28(금) ~ 3.1(토)', label: '2월 28일', status: 'open' as const, male: { current: 0, max: 25 }, female: { current: 0, max: 25 } },
+  { date: '2.7(금) ~ 2.8(토)', label: '2월 7일', status: 'closed' as const, male: { current: 24, max: 24 }, female: { current: 24, max: 24 } },
 ]
 
 const EVENT_DAYS = [7, 8, 14, 15, 21, 22, 28]
@@ -101,17 +101,42 @@ function App() {
         </div>
 
         <div className="event-list">
-          {EVENTS.map((ev, i) => (
-            <div key={i} className="event-item">
-              <span className={`event-badge ${ev.status}`}>
-                {ev.status === 'open' ? '모집중' : '종료'}
-              </span>
-              <div className="event-info">
-                <div className="event-date">{ev.date}</div>
-                <div className="event-detail">{ev.label} {ev.detail}</div>
+          {EVENTS.map((ev, i) => {
+            const totalCurrent = ev.male.current + ev.female.current
+            const totalMax = ev.male.max + ev.female.max
+            const malePercent = ev.male.max > 0 ? (ev.male.current / ev.male.max) * 100 : 0
+            const femalePercent = ev.female.max > 0 ? (ev.female.current / ev.female.max) * 100 : 0
+            return (
+              <div key={i} className="event-item">
+                <div className="event-top">
+                  <span className={`event-badge ${ev.status}`}>
+                    {ev.status === 'open' ? '모집중' : '종료'}
+                  </span>
+                  <div className="event-info">
+                    <div className="event-date">{ev.date}</div>
+                    <div className="event-label">{ev.label}</div>
+                  </div>
+                  <div className="event-total">{totalCurrent}/{totalMax}명</div>
+                </div>
+                <div className="event-gauge-section">
+                  <div className="event-gauge-row">
+                    <span className="gauge-label male">남</span>
+                    <div className="gauge-bar">
+                      <div className="gauge-fill male" style={{ width: `${malePercent}%` }} />
+                    </div>
+                    <span className="gauge-count">{ev.male.current}/{ev.male.max}</span>
+                  </div>
+                  <div className="event-gauge-row">
+                    <span className="gauge-label female">여</span>
+                    <div className="gauge-bar">
+                      <div className="gauge-fill female" style={{ width: `${femalePercent}%` }} />
+                    </div>
+                    <span className="gauge-count">{ev.female.current}/{ev.female.max}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </section>
 

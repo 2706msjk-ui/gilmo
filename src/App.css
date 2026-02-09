@@ -43,8 +43,9 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: linear-gradient(180deg, rgba(10,10,10,0) 0%, var(--bg-primary) 100%),
-              radial-gradient(ellipse at 50% 30%, rgba(201,165,90,0.15) 0%, transparent 70%);
+  background:
+    linear-gradient(180deg, rgba(10,10,10,0.4) 0%, rgba(10,10,10,0.6) 50%, var(--bg-primary) 100%),
+    url('/hero-bg-new.jpg') center/cover no-repeat;
   padding: 40px 20px;
 }
 
@@ -217,17 +218,23 @@
 
 .event-item {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 14px;
   background: var(--bg-card);
   border-radius: 12px;
-  padding: 16px 20px;
+  padding: 18px 20px;
   border: 1px solid var(--border);
   transition: border-color 0.2s;
 }
 
 .event-item:hover {
   border-color: var(--accent);
+}
+
+.event-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .event-badge {
@@ -257,10 +264,77 @@
   color: var(--text-muted);
 }
 
-.event-detail {
+.event-label {
   font-size: 0.95rem;
   font-weight: 500;
   margin-top: 2px;
+}
+
+.event-total {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Gauge */
+.event-gauge-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-gauge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gauge-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 20px;
+  text-align: center;
+  border-radius: 4px;
+  padding: 2px 0;
+}
+
+.gauge-label.male {
+  color: #4a9eff;
+}
+
+.gauge-label.female {
+  color: #ff6b9d;
+}
+
+.gauge-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.gauge-fill.male {
+  background: linear-gradient(90deg, #4a9eff, #6bb3ff);
+}
+
+.gauge-fill.female {
+  background: linear-gradient(90deg, #ff6b9d, #ff8fb8);
+}
+
+.gauge-count {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  width: 40px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== 3. APPLY BUTTON (FIXED) ===== */
