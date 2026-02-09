@@ -106,8 +106,10 @@ function App() {
     return () => { document.body.style.overflow = '' }
   }, [modal])
 
-  // Reset form on modal close
+  // Reset form on modal open (cleanup old previews to free memory)
   const openRegistration = () => {
+    if (bodyPreview) URL.revokeObjectURL(bodyPreview)
+    if (facePreview) URL.revokeObjectURL(facePreview)
     setFormData({ name: '', birthDate: '', gender: '', phone: '', instagramId: '', noInstagram: false, height: '', weight: '' })
     setBodyPhoto(null); setFacePhoto(null)
     setBodyPreview(''); setFacePreview('')
@@ -176,8 +178,7 @@ function App() {
       setSubmitSuccess(true)
     } catch (err: any) {
       console.error('Registration failed:', err)
-      const detail = err?.message || err?.error_description || String(err)
-      setFormErrors({ submit: `오류: ${detail}` })
+      setFormErrors({ submit: '신청 중 오류가 발생했습니다. 다시 시도해주세요.' })
     } finally {
       setSubmitting(false)
     }

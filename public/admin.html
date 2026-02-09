@@ -272,7 +272,7 @@
         }
 
         ${smsModal ? renderSmsModal() : ''}
-        ${lightboxUrl ? `<div class="lightbox" onclick="closeLightbox()"><img src="${lightboxUrl}" /></div>` : ''}
+        ${lightboxUrl ? `<div class="lightbox" onclick="closeLightbox()"><img src="${escAttr(lightboxUrl)}" /></div>` : ''}
       `
     }
 
@@ -304,8 +304,8 @@
       return `
         <div class="card">
           <div class="card-photos">
-            <img src="${reg.body_photo_url || ''}" alt="전신" onclick="openLightbox('${reg.body_photo_url || ''}')" />
-            <img src="${reg.face_photo_url || ''}" alt="얼굴" onclick="openLightbox('${reg.face_photo_url || ''}')" />
+            <img src="${escAttr(reg.body_photo_url || '')}" alt="전신" onclick="openLightbox('${escAttr(reg.body_photo_url || '')}')" />
+            <img src="${escAttr(reg.face_photo_url || '')}" alt="얼굴" onclick="openLightbox('${escAttr(reg.face_photo_url || '')}')" />
           </div>
           <div class="card-body">
             <div class="card-name-row">
@@ -439,6 +439,11 @@
     function escHtml(str) {
       if (!str) return ''
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    function escAttr(str) {
+      if (!str) return ''
+      return str.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     }
 
     // ===== Init =====
