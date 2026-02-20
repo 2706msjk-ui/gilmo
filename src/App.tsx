@@ -72,11 +72,11 @@ const EVENTS = [
 const EVENT_DAYS = [7, 8, 14, 15, 21, 22, 28]
 
 const QNA_DATA = [
-  { q: '술을 잘 못 마시는데 괜찮을까요?', a: '음료와 다과도 준비되어 있어 술을 드시지 않아도 즐기실 수 있고, 분위기와 네트워킹 중심 행사라 음료만 드셔도 충분히 즐기실 수 있습니다.' },
-  { q: '혼자 가도 / 친구랑 가도 되나요?', a: '대부분 혼자 참여하시는 분들이지만 파티가 끝날 때엔 모두 친구가 되어 있어요! 친구랑 같이 오시면 2배 더 즐겁습니다.' },
-  { q: '내향형 인간인데 잘 놀 수 있을까요?', a: '저희는 모두가 즐길 수 있는 적절한 텐션의 컨텐츠를 제공해드립니다. 파티 소셜링이 궁금하지만 쉽게 도전하지 못했던 분들께 적극 추천드려요!' },
-  { q: '나이 제한이 있나요?', a: '남성은 93년 ~ 06년생, 여성은 93년 ~ 07년생까지 신청이 가능합니다. 주로 20대 초중반에서 20대 후반 신청자들이 가장 많습니다.' },
-  { q: '드레스코드가 있나요?', a: '특별한 드레스코드는 없지만, 파티 분위기에 맞는 세미캐주얼 ~ 스마트캐주얼 복장을 권장합니다.' },
+  { q: '혼자 참여해도 어색하지 않을까요?', a: '네, 신청자의 약 70~80%가 혼자 방문하십니다. 모든 분이 자연스럽게 대화에 참여하실 수 있도록 체계적인 로테이션 프로그램과 합석 매칭 시스템이 준비되어 있으니 걱정 없이 오셔도 됩니다.' },
+  { q: '승인 기준은 무엇인가요?', a: 'MIDNIGHT IN SADANG은 파티의 품질과 참가자 간의 조화를 위해 선별제를 운영합니다. 외적인 분위기, 매너, 연령대 등 다양한 요소를 종합적으로 고려하여 승인 절차를 진행합니다. 승인되지 않으신 경우, 참가비는 100% 환불됩니다.' },
+  { q: '나이 제한이 엄격한가요?', a: '남성 90년~04년생, 여성 92년~05년생 분들을 대상으로 운영하고 있습니다. 비슷한 연령대의 참가자들이 모여 공감대를 형성하고 깊이 있는 대화를 나누실 수 있도록 관리하고 있습니다.' },
+  { q: '사진(프로필)은 어디에 사용되나요?', a: '신청 시 제출하신 사진은 본인 확인 및 승인 절차를 위한 용도로만 사용됩니다. 파티 종료 후 해당 정보는 안전하게 파기되니 안심하셔도 됩니다.' },
+  { q: '환불 규정이 궁금합니다.', a: '파티의 특성상 인원 및 남녀 성비를 미리 확정해야 하므로, 행사 7일 전까지만 취소 및 환불이 가능합니다. 상세 환불 규정은 신청서 하단을 확인해 주세요.' },
 ]
 
 function App() {
@@ -84,13 +84,17 @@ function App() {
   const [calYear, setCalYear] = useState(today.getFullYear())
   const [calMonth, setCalMonth] = useState(today.getMonth())
   const [openQna, setOpenQna] = useState<number | null>(null)
-  const [modal, setModal] = useState<'terms' | 'privacy' | 'registration' | null>(null)
+  const [modal, setModal] = useState<'terms' | 'privacy' | 'refund' | 'registration' | null>(null)
+  const [prevModal, setPrevModal] = useState<typeof modal>(null)
   const [heroLoaded, setHeroLoaded] = useState(false)
 
   // ===== Registration Form State =====
   const [formData, setFormData] = useState({
     name: '', birthDate: '', gender: '' as '' | 'male' | 'female',
-    phone: '', instagramId: '', noInstagram: false, height: '', weight: '',
+    phone: '', location: '', job: '', height: '', weight: '',
+    instagramId: '', noInstagram: false,
+    charm: '', preferredStyle: '', referralSource: '',
+    agreeAlcohol: false, agreeTerms: false, agreePrivacy: false, agreeRefund: false,
   })
   const [bodyPhoto, setBodyPhoto] = useState<File | null>(null)
   const [facePhoto, setFacePhoto] = useState<File | null>(null)
@@ -106,11 +110,27 @@ function App() {
     return () => { document.body.style.overflow = '' }
   }, [modal])
 
+  // Open a legal modal from within the registration form (preserves form state)
+  const openLegalFromForm = (target: 'terms' | 'privacy' | 'refund') => {
+    setPrevModal('registration')
+    setModal(target)
+  }
+
+  // Close current modal (returns to previous if opened from form)
+  const closeModal = () => {
+    if (prevModal) {
+      setModal(prevModal)
+      setPrevModal(null)
+    } else {
+      setModal(null)
+    }
+  }
+
   // Reset form on modal open (cleanup old previews to free memory)
   const openRegistration = () => {
     if (bodyPreview) URL.revokeObjectURL(bodyPreview)
     if (facePreview) URL.revokeObjectURL(facePreview)
-    setFormData({ name: '', birthDate: '', gender: '', phone: '', instagramId: '', noInstagram: false, height: '', weight: '' })
+    setFormData({ name: '', birthDate: '', gender: '', phone: '', location: '', job: '', height: '', weight: '', instagramId: '', noInstagram: false, charm: '', preferredStyle: '', referralSource: '', agreeAlcohol: false, agreeTerms: false, agreePrivacy: false, agreeRefund: false })
     setBodyPhoto(null); setFacePhoto(null)
     setBodyPreview(''); setFacePreview('')
     setFormErrors({}); setSubmitSuccess(false)
@@ -125,16 +145,22 @@ function App() {
     if (!formData.birthDate) errors.birthDate = '생년월일을 선택해주세요'
     if (formData.birthDate && formData.gender) {
       const y = parseInt(formData.birthDate.split('-')[0])
-      if (formData.gender === 'male' && (y < 1993 || y > 2006)) errors.birthDate = '남성은 93~06년생만 신청 가능합니다'
-      if (formData.gender === 'female' && (y < 1993 || y > 2007)) errors.birthDate = '여성은 93~07년생만 신청 가능합니다'
+      if (formData.gender === 'male' && (y < 1990 || y > 2004)) errors.birthDate = '남성은 90~04년생만 신청 가능합니다'
+      if (formData.gender === 'female' && (y < 1992 || y > 2005)) errors.birthDate = '여성은 92~05년생만 신청 가능합니다'
     }
     const phoneDigits = formData.phone.replace(/\D/g, '')
     if (phoneDigits.length < 10) errors.phone = '올바른 연락처를 입력해주세요'
-    if (!formData.noInstagram && !formData.instagramId.trim()) errors.instagramId = '인스타 ID를 입력하거나 "없음"을 선택해주세요'
+    if (!formData.location.trim()) errors.location = '거주지를 입력해주세요'
+    if (!formData.job.trim()) errors.job = '직업을 입력해주세요'
     if (!formData.height.trim()) errors.height = '키를 입력해주세요'
     if (!formData.weight.trim()) errors.weight = '몸무게를 입력해주세요'
+    if (!formData.noInstagram && !formData.instagramId.trim()) errors.instagramId = '인스타 ID를 입력하거나 "없음"을 선택해주세요'
     if (!bodyPhoto) errors.bodyPhoto = '전신 사진을 업로드해주세요'
     if (!facePhoto) errors.facePhoto = '얼굴 사진을 업로드해주세요'
+    if (!formData.agreeAlcohol) errors.agreeAlcohol = '주류 대리구매 동의는 필수입니다'
+    if (!formData.agreeTerms) errors.agreeTerms = '파티 이용 규정 동의는 필수입니다'
+    if (!formData.agreePrivacy) errors.agreePrivacy = '개인정보 수집 동의는 필수입니다'
+    if (!formData.agreeRefund) errors.agreeRefund = '취소 및 환불 규정 동의는 필수입니다'
     return errors
   }
 
@@ -167,9 +193,14 @@ function App() {
         birth_date: formData.birthDate,
         gender: formData.gender,
         phone: formData.phone.replace(/\D/g, ''),
-        instagram_id: formData.noInstagram ? '없음' : formData.instagramId.trim(),
+        location: formData.location.trim(),
+        job: formData.job.trim(),
         height: formData.height.trim(),
         weight: formData.weight.trim(),
+        instagram_id: formData.noInstagram ? '없음' : formData.instagramId.trim(),
+        charm: formData.charm.trim(),
+        preferred_style: formData.preferredStyle.trim(),
+        referral_source: formData.referralSource.trim(),
         body_photo_url: bodyUrl,
         face_photo_url: faceUrl,
         sms_sent: false,
@@ -193,6 +224,7 @@ function App() {
   const detailsRef = useReveal()
   const conditionsRef = useStaggerReveal()
   const timetableRef = useStaggerReveal()
+  const timetable2Ref = useStaggerReveal()
   const noticeRef = useStaggerReveal()
   const qnaRef = useReveal()
   const contactRef = useReveal()
@@ -235,13 +267,15 @@ function App() {
             }} />
           ))}
         </div>
-        <p className="hero-tagline hero-anim" style={{ animationDelay: '0.2s' }}>PREMIUM SOCIAL GATHERING</p>
-        <h1 className="hero-brand hero-anim" style={{ animationDelay: '0.5s' }}>GILMO'S PEOPLE</h1>
+        <p className="hero-tagline hero-anim" style={{ animationDelay: '0.2s' }}>2030 프리미엄 솔로 파티 | 외모 승인제 | 대화 중심 | 매칭 시스템</p>
+        <h1 className="hero-brand hero-anim" style={{ animationDelay: '0.5s' }}>MIDNIGHT IN SADANG</h1>
         <p className="hero-description hero-anim" style={{ animationDelay: '0.8s' }}>
-          당신의 설렘이 시작되는 곳<br />
-          엄선된 사람들과 함께하는 특별한 밤
+          밤이 깊어질수록, 대화는 더 선명해집니다.
         </p>
-        <div className="hero-scroll hero-anim" style={{ animationDelay: '1.2s' }}>SCROLL</div>
+        <p className="hero-sub hero-anim" style={{ animationDelay: '1.0s' }}>
+          엄선된 사람들과 마주하는 가장 아름다운 순간,<br />온전한 설렘이 시작되는 MIDNIGHT IN SADANG
+        </p>
+        <div className="hero-scroll hero-anim" style={{ animationDelay: '1.3s' }}>SCROLL</div>
       </section>
 
       {/* ===== 2. SCHEDULE ===== */}
@@ -323,24 +357,31 @@ function App() {
       {/* ===== 4-1. PARTY INTRO ===== */}
       <section className="section" id="intro">
         <h2 className="section-title">About</h2>
-        <p className="section-subtitle">GILMO'S PEOPLE은 이런 파티입니다</p>
+        <p className="section-subtitle">단순한 만남을 넘어, 취향과 분위기가 연결되는 밤</p>
         <div className="divider" />
+
+        <p className="intro-description">
+          MIDNIGHT IN SADANG은 가벼운 가십이나 소란스러운 게임보다, 서로의 눈을 맞추며 나누는 깊은 대화의 가치를 믿습니다. 사당의 깊은 밤, 당신과 닮은 매력적인 이성들과의 특별한 조우를 준비했습니다. 단순한 모임을 넘어, 결이 맞는 사람들이 모여 온전한 설렘을 나누는 프리미엄 솔로 파티를 경험해 보세요.
+        </p>
 
         <div className="intro-cards" ref={introRef}>
           <div className="intro-card stagger-child">
-            <div className="intro-card-icon">&#x2728;</div>
-            <h3>감각적인 공간과 분위기</h3>
-            <p>세련된 인테리어와 감각적인 조명이 만드는 특별한 공간에서 잊지 못할 밤을 선사합니다.</p>
+            <div className="intro-card-number">01</div>
+            <h3>Selected Beauty</h3>
+            <h4 className="intro-card-label">외모 승인제</h4>
+            <p>누구나 꿈꾸지만, 아무나 함께할 수 없는 선별된 만남. 신청 후 정중한 승인 절차를 거쳐 참가가 확정됩니다. 단순히 외적인 인상을 넘어, 파티의 품격과 어우러지는 전반적인 분위기와 매너를 세심하게 고려합니다. 당신이 마주할 상대 또한 엄격하게 선별된 매력적인 분들이기에, 그 어느 곳보다 높은 만족도의 조우를 약속드립니다.</p>
           </div>
           <div className="intro-card stagger-child">
-            <div className="intro-card-icon">&#x1F91D;</div>
-            <h3>자연스러운 만남</h3>
-            <p>어색함 없이 자연스럽게 어울릴 수 있는 다양한 프로그램과 컨텐츠로 새로운 인연을 만들어보세요.</p>
+            <div className="intro-card-number">02</div>
+            <h3>Deep Connection</h3>
+            <h4 className="intro-card-label">대화</h4>
+            <p>한눈에 담고, 깊게 나누는 시간. 소란스러운 게임 대신 대화의 본질에 집중합니다. '미드나잇 스캔'으로 오늘 밤의 모든 인연을 마주하고, '딥 로테이션'을 통해 엄선된 인연들과 밀도 높은 대화를 나눕니다. 겉핥기식 대화가 아닌, 취향과 가치관이 선명히 연결되는 특별한 몰입을 경험하세요. 못다 한 이야기는 2부 자유 시간에서 당신만의 속도로 완성할 수 있습니다.</p>
           </div>
           <div className="intro-card stagger-child">
-            <div className="intro-card-icon">&#x1F3A4;</div>
-            <h3>전문 MC 진행</h3>
-            <p>경험 많은 전문 MC의 진행으로 처음 오시는 분들도 편하게 즐기실 수 있습니다.</p>
+            <div className="intro-card-number">03</div>
+            <h3>Intentional Choice</h3>
+            <h4 className="intro-card-label">선택</h4>
+            <p>당신의 직관이 인연으로 완성되는 순간. 1부에서는 '합석 신청' 시스템을 통해 조심스럽게 서로의 호감을 확인하고 자연스러운 연결을 돕습니다. 이어지는 2부에서는 정해진 틀을 벗어나, 당신의 마음이 향하는 이성과 더 깊이 집중할 수 있는 자유 선택 시간이 주어집니다. 스스로 디자인하는 인연의 결실을 확인하세요.</p>
           </div>
         </div>
       </section>
@@ -348,37 +389,41 @@ function App() {
       {/* ===== 4-2. DETAILS ===== */}
       <section className="section details reveal-section" id="details" ref={detailsRef}>
         <h2 className="section-title">Details</h2>
-        <p className="section-subtitle">파티 제공 내용</p>
+        <p className="section-subtitle">파티 상세 정보</p>
         <div className="divider" />
 
         <div className="detail-table">
           <div className="detail-row">
             <div className="detail-label">파티 시간</div>
-            <div className="detail-value">1부: 20시 ~ 23시 / 2부: 23시 ~ 02시</div>
+            <div className="detail-value">1부 21:00 ~ 00:30 / 2부 00:30 ~ 02:30</div>
           </div>
           <div className="detail-row">
             <div className="detail-label">제공 사항</div>
-            <div className="detail-value">핑거 푸드 + 소주, 맥주, 물, 음료 무한 제공</div>
+            <div className="detail-value">핑거 푸드(안주류) / 소주, 맥주, 음료, 생수 무제한 제공</div>
           </div>
           <div className="detail-row">
-            <div className="detail-label">인원</div>
-            <div className="detail-value">24:24 ~ 45:45 (승인된 인원에 따라 상이)</div>
+            <div className="detail-label">신분증</div>
+            <div className="detail-value">본인 확인 및 연령 확인을 위한 신분증 지참 필수</div>
           </div>
           <div className="detail-row">
-            <div className="detail-label">남성</div>
-            <div className="detail-value">93년생부터 06년생까지 참여 가능</div>
+            <div className="detail-label">참여 인원</div>
+            <div className="detail-value">남녀 각 24명 ~ 40명 (승인 인원에 따라 상이)</div>
           </div>
           <div className="detail-row">
-            <div className="detail-label">여성</div>
-            <div className="detail-value">93년생부터 07년생까지 참여 가능</div>
+            <div className="detail-label">참여 대상</div>
+            <div className="detail-value">남성 90년생 ~ 04년생 / 여성 92년생 ~ 05년생</div>
+          </div>
+          <div className="detail-row">
+            <div className="detail-label">Dress Code</div>
+            <div className="detail-value">블랙 or 화이트 — 깔끔하며 본인의 매력을 가장 잘 보여주는 스타일</div>
           </div>
           <div className="detail-row">
             <div className="detail-label">참여비</div>
-            <div className="detail-value">신청서에서 이벤트 가격 확인해주세요!</div>
+            <div className="detail-value">신청서 내 이벤트 특가를 확인해 주세요!</div>
           </div>
           <div className="detail-row">
-            <div className="detail-label">위치</div>
-            <div className="detail-value">홍대입구역 도보 5분 거리 (상세 주소는 문자로 발송)</div>
+            <div className="detail-label">장소</div>
+            <div className="detail-value">사당역 도보 5분 거리 (상세 주소는 참가 확정 시 개별 문자로 발송)</div>
           </div>
         </div>
       </section>
@@ -386,32 +431,28 @@ function App() {
       {/* ===== 4-3. CONDITIONS ===== */}
       <section className="section" id="conditions">
         <h2 className="section-title">Who</h2>
-        <p className="section-subtitle">이런 분들에게 추천해요!</p>
+        <p className="section-subtitle">매력적인 주인공을 찾습니다</p>
         <div className="divider" />
+
+        <p className="condition-description">
+          단순한 만남을 넘어, 서로에게 기분 좋은 자극과 깊은 대화를 선사할 수 있는 분들과 함께하고자 합니다.
+        </p>
 
         <div className="condition-cards" ref={conditionsRef}>
           <div className="condition-card stagger-child">
             <div className="condition-number">01</div>
-            <h4>새로운 인연을<br />만들고 싶은 솔로!</h4>
+            <h4>매력적인 비주얼과<br />고유한 분위기</h4>
+            <p>자신을 가꿀 줄 알고, 본인만의 스타일과 분위기를 가진 분을 선호합니다.</p>
           </div>
           <div className="condition-card stagger-child">
             <div className="condition-number">02</div>
-            <h4>하루를 마치고<br />설레고 싶은 누구나</h4>
+            <h4>대화의 가치를<br />아는 분</h4>
+            <p>상대방의 이야기를 경청하고 자신의 생각을 조리 있게 나눌 줄 아는 성숙한 분을 기다립니다.</p>
           </div>
           <div className="condition-card stagger-child">
             <div className="condition-number">03</div>
-            <h4>혼자라도 편하게<br />다양한 프로그램 구성</h4>
-          </div>
-        </div>
-
-        <div className="condition-info">
-          <div className="condition-info-item">
-            <h4>&#x1F464; 나이 제한 있나요?</h4>
-            <p>남성은 93년 ~ 06년생<br />여성은 93년 ~ 07년생까지 신청이 가능합니다.<br />주로 20대 초중반에서 20대 후반 신청자들이 가장 많습니다.</p>
-          </div>
-          <div className="condition-info-item">
-            <h4>&#x270B; 입장 기준은 무엇인가요?</h4>
-            <p>입금 확인 후, 모든 참가자분들께 최상의 경험과 특별한 순간을 선사하고자 세심한 선별과정을 거쳐 문자로 최종 안내를 드립니다.</p>
+            <h4>타인에 대한<br />매너와 존중</h4>
+            <p>처음 만나는 사람에게 예의를 갖추고, 파티의 분위기를 함께 만들어갈 수 있는 분이어야 합니다.</p>
           </div>
         </div>
       </section>
@@ -422,30 +463,52 @@ function App() {
         <p className="section-subtitle">파티 진행 순서</p>
         <div className="divider" />
 
-        <div className="timeline" ref={timetableRef}>
-          <div className="timeline-item stagger-child">
-            <div className="timeline-dot" />
-            <div className="timeline-time">20:30</div>
-            <div className="timeline-title">파티 시작</div>
-            <div className="timeline-desc">8시 10분부터 입장 가능합니다.</div>
+        <div className="timetable-part">
+          <h3 className="timetable-part-title">1부: 21:00 ~ 00:30</h3>
+          <div className="timeline" ref={timetableRef}>
+            <div className="timeline-item stagger-child">
+              <div className="timeline-dot" />
+              <div className="timeline-time">21:00 - 21:20</div>
+              <div className="timeline-title">Midnight Scan</div>
+              <div className="timeline-desc">전원 대면 및 가벼운 눈인사. 오늘 밤을 함께할 모든 인연을 미리 확인하는 설레는 시작.</div>
+            </div>
+            <div className="timeline-item stagger-child">
+              <div className="timeline-dot" />
+              <div className="timeline-time">21:20 - 23:00</div>
+              <div className="timeline-title">Deep Table Rotation</div>
+              <div className="timeline-desc">[30분 대화 + 10분 휴식] 시스템. 넉넉한 시간 동안 서로의 가치관과 취향을 깊이 있게 알아가는 4:4 그룹 다이닝.</div>
+            </div>
+            <div className="timeline-item stagger-child">
+              <div className="timeline-dot" />
+              <div className="timeline-time">23:00 - 23:30</div>
+              <div className="timeline-title">Midnight Signal</div>
+              <div className="timeline-desc">1부의 하이라이트. 용기 있는 자가 인연을 얻는 깜짝 호감 표시 및 시그널 이벤트 시간.</div>
+            </div>
+            <div className="timeline-item stagger-child">
+              <div className="timeline-dot" />
+              <div className="timeline-time">23:30 - 00:30</div>
+              <div className="timeline-title">Impression & Final</div>
+              <div className="timeline-desc">1부의 마지막 테이블 대화. 못다 한 이야기는 2부 자유 시간으로 이어지는 감질맛 나는 마무리.</div>
+            </div>
           </div>
-          <div className="timeline-item stagger-child">
-            <div className="timeline-dot" />
-            <div className="timeline-time">22:30</div>
-            <div className="timeline-title">1부 컨텐츠 종료</div>
-            <div className="timeline-desc">1부만 예약하셔도 현장 결제 가능합니다.</div>
-          </div>
-          <div className="timeline-item stagger-child">
-            <div className="timeline-dot" />
-            <div className="timeline-time">23:30</div>
-            <div className="timeline-title">2부 파티 시작</div>
-            <div className="timeline-desc">본 파티와 같은 장소에서 진행됩니다.</div>
-          </div>
-          <div className="timeline-item stagger-child">
-            <div className="timeline-dot" />
-            <div className="timeline-time">02:00</div>
-            <div className="timeline-title">파티 종료</div>
-            <div className="timeline-desc">순식간에 지나가는 특별한 시간.</div>
+        </div>
+
+        <div className="timetable-part">
+          <h3 className="timetable-part-title">2부: 00:30 ~ 02:30</h3>
+          <p className="timetable-part-desc">탐색의 시간이 지나고, 이제 당신의 직관이 움직일 차례입니다.</p>
+          <div className="timeline" ref={timetable2Ref}>
+            <div className="timeline-item stagger-child">
+              <div className="timeline-dot" />
+              <div className="timeline-time">00:30 - 00:40</div>
+              <div className="timeline-title">The Midnight Choice</div>
+              <div className="timeline-desc">1부에서 눈여겨본 인연을 향한 자유로운 자리 이동.</div>
+            </div>
+            <div className="timeline-item stagger-child">
+              <div className="timeline-dot" />
+              <div className="timeline-time">00:40 - 02:30</div>
+              <div className="timeline-title">Midnight Lounge</div>
+              <div className="timeline-desc">시간 제한 없는 깊은 몰입. 마음에 맞는 사람들과 사당의 밤을 온전히 즐기는 자유 네트워킹 시간.</div>
+            </div>
           </div>
         </div>
       </section>
@@ -453,27 +516,25 @@ function App() {
       {/* ===== 6. NOTICE ===== */}
       <section className="section" id="notice">
         <h2 className="section-title">Notice</h2>
-        <p className="section-subtitle">유의사항</p>
+        <p className="section-subtitle">파티의 원활한 진행과 쾌적한 환경을 위해 아래 내용을 반드시 확인해 주세요.</p>
         <div className="divider" />
 
         <div className="notice-list" ref={noticeRef}>
           <div className="notice-item stagger-child">
-            <strong>01.</strong> 시간 약속을 지켜주세요! 진행 시간에 맞춰 정시 입장을 부탁드립니다.
+            <strong>01.</strong> <strong>신분증 지참 필수:</strong> 본인 확인 및 연령 확인을 위해 주민등록증, 운전면허증 등 실물 신분증을 반드시 지참해 주세요. (미지참 시 입장이 제한되며, 이로 인한 환불은 불가합니다.)
           </div>
           <div className="notice-item stagger-child">
-            <strong>02.</strong> 성비 / 연령대 등 기타 사유로 인해 승인이 늦어 질 수 있습니다.
+            <strong>02.</strong> <strong>드레스코드 준수:</strong> 세련된 파티 분위기를 위해 트레이닝복, 슬리퍼, 과도하게 캐주얼한 복장 등은 입장이 제한될 수 있습니다. 본인의 매력을 가장 잘 보여줄 수 있는 룩으로 함께해 주세요.
           </div>
           <div className="notice-item stagger-child">
-            <strong>03.</strong> 행사 중 편의를 위해 간단한 다과, 음료와 주류가 무상으로 비치되어 있습니다. 참가비는 장소 대관 및 프로그램 운영비에 사용되며, 음식과 주류는 별도 비용 없이 제공됩니다.
+            <strong>03.</strong> <strong>프로필 정보의 정확성:</strong> 신청 시 작성하신 정보가 허위로 밝혀질 경우, 승인이 취소되거나 현장에서 퇴장 조치될 수 있습니다.
           </div>
           <div className="notice-item stagger-child">
-            <strong>04.</strong> 과한 스킨십, 불쾌한 언행 사용 시 <span className="warning">강제 퇴장</span>입니다. 이 때 참가비 환불은 <span className="warning">불가</span>합니다.
+            <strong>04.</strong> <strong>사진 촬영 안내:</strong> 파티 현장 스케치 사진 및 영상 촬영이 진행될 수 있습니다. 촬영본은 마케팅 용도로 활용될 수 있으며, 모든 인물은 블러(모자이크) 처리되어 프라이버시를 보호해 드립니다.
           </div>
-        </div>
-
-        <div className="notice-location">
-          <h4>위치</h4>
-          <p>홍대입구역 도보 5분 거리<br />(상세 주소는 승인 후 문자로 안내됩니다)</p>
+          <div className="notice-item stagger-child">
+            <strong>05.</strong> <strong>매너 가이드:</strong> 과도한 음주, 무례한 언행, 상대방이 원치 않는 신체 접촉이나 연락처 요구 등 타인에게 불쾌감을 주는 행위 적발 시 <span className="warning">즉시 퇴장</span> 조치되며, 향후 모든 파티 참여가 <span className="warning">영구히 제한</span>됩니다.
+          </div>
         </div>
       </section>
 
@@ -506,9 +567,9 @@ function App() {
 
         <p className="contact-message">
           처음 오시는 분들이 대부분입니다.<br />
-          찰나의 용기가 여러분들의 인생을 변화 시킵니다.<br />
-          용기 내서 참여해 보세요. 후회 없는 시간 만들어드리겠습니다.<br /><br />
-          언제든지 문의사항 있으시면 편하게 연락주세요 :)
+          찰나의 용기가 여러분들의 인생을 변화시킵니다.<br />
+          용기 내서 참여해 보세요. 후회 없는 밤을 만들어드리겠습니다.<br /><br />
+          언제든지 문의사항 있으시면 편하게 연락주세요.
         </p>
 
         <div className="contact-icons">
@@ -535,8 +596,9 @@ function App() {
         <div className="footer-links">
           <span className="footer-link" onClick={() => setModal('terms')}>이용약관</span>
           <span className="footer-link" onClick={() => setModal('privacy')}>개인정보처리방침</span>
+          <span className="footer-link" onClick={() => setModal('refund')}>취소 및 환불 규정</span>
         </div>
-        <p className="footer-copy">&copy; 2026 GILMO'S PEOPLE. All rights reserved.</p>
+        <p className="footer-copy">&copy; 2026 MIDNIGHT IN SADANG. All rights reserved.</p>
       </footer>
 
       <div className="bottom-spacer" />
@@ -546,47 +608,156 @@ function App() {
 
       {/* ===== MODALS ===== */}
       {modal && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className={`modal ${modal === 'registration' ? 'modal-form' : ''}`} onClick={e => e.stopPropagation()}>
             {modal === 'terms' ? (
-              <>
+              <div className="legal-content">
                 <h2>이용약관</h2>
-                <p>제1조 (목적)<br />본 이용약관은 "GILMO'S PEOPLE"(이하 "사이트")의 서비스 이용조건과 운영에 관한 제반 사항 규정을 목적으로 합니다.</p>
-                <p>제2조 (용어의 정의)<br />본 약관에서 사용되는 주요한 용어의 정의는 다음과 같습니다.<br />- 회원: 사이트의 약관에 동의하고 개인정보를 제공하여 회원등록을 한 자로서, 사이트와의 이용계약을 체결하고 사이트를 이용하는 이용자를 말합니다.<br />- 이용계약: 사이트 이용과 관련하여 사이트와 회원간에 체결하는 계약을 말합니다.</p>
-                <p>제3조 (약관 외 준칙)<br />운영자는 필요한 경우 별도로 운영정책을 공지 안내할 수 있으며, 본 약관과 운영정책이 중첩될 경우 운영정책이 우선 적용됩니다.</p>
-                <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
-              </>
+
+                <h3>제1조 (목적)</h3>
+                <p>본 약관은 'MIDNIGHT IN SADANG'(이하 "사이트")이 제공하는 파티 중개 및 관련 서비스의 이용과 관련하여 사이트와 이용자 간의 권리, 의무 및 책임 사항을 규정함을 목적으로 합니다.</p>
+
+                <h3>제2조 (저작권 및 기획 자산의 보호)</h3>
+                <ul>
+                  <li>본 사이트에서 제공하는 모든 콘텐츠(텍스트, 로고, 파티 컨셉, 운영 로직, 타임테이블, 디자인 등)의 저작권 및 지식재산권은 'MIDNIGHT IN SADANG'에 귀속됩니다.</li>
+                  <li>이용자는 주최 측의 사전 서면 동의 없이 본 사이트의 정보를 복제, 배포, 전송하거나 이를 모방하여 유사한 서비스를 제공하는 등 영리 목적으로 활용할 수 없습니다.</li>
+                </ul>
+
+                <h3>제3조 (서비스 이용 및 승인)</h3>
+                <ul>
+                  <li>본 서비스는 신청 후 주최 측의 승인 절차를 거쳐 참가 확정 여부가 결정되는 선별제 시스템으로 운영됩니다.</li>
+                  <li>주최 측은 파티의 성격과 조화를 고려하여 승인 여부를 결정할 권한을 가지며, 미승인 시 사유를 별도로 고지하지 않을 수 있습니다.</li>
+                </ul>
+
+                <h3>제4조 (주류·음료 대리구매 사무 및 서비스 제공)</h3>
+                <ul>
+                  <li>본 파티의 참가비는 장소 대관료, 행사 기획 운영비, 기본 스낵 및 핑거푸드(안주류) 준비비로 구성되며, 주류 판매 대금은 포함되어 있지 않습니다.</li>
+                  <li>사이트는 주류 판매업을 영위하지 않으며, 참가자의 편의를 위해 참가비를 활용하여 주류, 음료 및 생수를 일괄 대리구매하여 무상으로 제공하는 '대리구매 사무'를 수행합니다.</li>
+                  <li>제공되는 주류 및 스낵류는 서비스의 일환이며, 참가자는 신청 시 이러한 운영 방식에 동의한 것으로 간주합니다.</li>
+                  <li>모든 참가자는 과도한 음주를 자제할 의무가 있으며, 음주로 인한 사고 및 분쟁의 책임은 참가자 본인에게 있습니다. 미성년자 혹은 신분증 미지참자에게는 주류 제공이 절대 불가합니다.</li>
+                </ul>
+
+                <h3>제5조 (정보의 진실성 및 부정행위 책임)</h3>
+                <ul>
+                  <li>모든 참가자는 본인의 신원 정보(성명, 나이, 직업, 혼인 여부 등)를 사실에 근거하여 작성해야 합니다.</li>
+                  <li>기혼자, 사진 도용, 정보 허위 기재 등 부정적인 방법으로 참여한 것이 적발될 경우 즉시 퇴장 조치되며, 납부한 참가비는 환불되지 않습니다.</li>
+                  <li>위 항의 부정행위로 인하여 파티의 신뢰도를 실추시키거나 운영진 및 타 참가자에게 정신적·물질적 피해를 입힌 경우, 주최 측은 해당 참가자에게 민·형사상 법적 책임을 묻고 별도의 손해배상을 청구할 수 있습니다.</li>
+                </ul>
+
+                <h3>제6조 (매너 가이드 및 면책 조항)</h3>
+                <ul>
+                  <li>무례한 언행, 비동의 접촉/촬영 등 타인에게 불쾌감을 주는 행위 적발 시 즉시 퇴장 및 영구 제명됩니다.</li>
+                  <li>사이트는 참가자가 직접 작성한 프로필 정보의 신뢰성에 대해 보증하지 않으며, 이로 인해 발생한 분쟁에 대해 책임을 지지 않습니다.</li>
+                  <li>공식 프로그램 종료 이후 발생하는 참가자 간의 사적인 만남 및 사고에 대해서는 주최 측의 책임이 면제됩니다.</li>
+                </ul>
+
+                <button className="modal-close" onClick={closeModal}>닫기</button>
+              </div>
             ) : modal === 'privacy' ? (
-              <>
-                <h2>개인정보처리방침</h2>
-                <p>GILMO'S PEOPLE은 개인정보보호법에 따라 이용자의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 하기 위하여 다음과 같이 개인정보 처리방침을 수립·공개합니다.</p>
-                <p>1. 개인정보의 수집 및 이용목적<br />회사는 수집한 개인정보를 다음의 목적을 위해 활용합니다.<br />- 서비스 제공에 관한 계약 이행 및 서비스 제공<br />- 회원 관리: 본인확인, 개인식별, 불량회원의 부정이용 방지</p>
-                <p>2. 수집하는 개인정보의 항목<br />- 필수항목: 이름, 생년월일, 성별, 연락처, 인스타그램 ID<br />- 선택항목: 직업, 거주지역, 신체정보</p>
-                <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
-              </>
+              <div className="legal-content">
+                <h2>개인정보 처리방침</h2>
+
+                <h3>제1조 (개인정보의 처리 목적)</h3>
+                <p>'MIDNIGHT IN SADANG'은 다음의 목적을 위해 개인정보를 처리합니다.</p>
+                <ul>
+                  <li>파티 참가자 선별(승인제) 및 본인 확인</li>
+                  <li>서비스 이용에 따른 공지사항 전달 및 매칭 시스템 운영</li>
+                  <li>불량 이용자(허위 정보, 매너 위반자)의 재가입 방지 및 블랙리스트 관리</li>
+                </ul>
+
+                <h3>제2조 (처리하는 개인정보 항목)</h3>
+                <ul>
+                  <li><strong>필수항목:</strong> 성명, 성별, 생년월일, 연락처, 직업, 거주지, SNS 계정, 본인 확인용 사진</li>
+                  <li><strong>자동수집항목:</strong> IP 주소, 쿠키, 서비스 이용 기록(방문 일시 등)</li>
+                </ul>
+
+                <h3>제3조 (개인정보의 처리 및 보유 기간)</h3>
+                <ul>
+                  <li>이용자의 개인정보는 서비스 이용일로부터 1년간 보존 후 파기합니다.</li>
+                  <li>단, 관련 법령에 따른 보관이 필요하거나, 부정 이용(허위 기재, 성희롱 등)으로 제명된 회원의 정보는 재가입 차단 및 법적 대응을 위해 별도의 DB에 영구 보관될 수 있습니다.</li>
+                </ul>
+
+                <h3>제4조 (개인정보의 파기 절차 및 방법)</h3>
+                <ul>
+                  <li><strong>파기 절차:</strong> 보유 기간이 경과한 정보는 내부 방침에 따라 안전하게 삭제합니다.</li>
+                  <li><strong>파기 방법:</strong> 전자적 파일 형태는 기록을 재생할 수 없도록 기술적 방법을 사용하여 삭제하며, 종이 문서는 분쇄하거나 소각합니다.</li>
+                </ul>
+
+                <h3>제5조 (개인정보 보호책임자)</h3>
+                <p>사이트는 개인정보 처리에 관한 업무를 총괄해서 책임질 보호책임자를 아래와 같이 지정합니다.</p>
+                <ul>
+                  <li><strong>성명:</strong> MIDNIGHT IN SADANG 운영팀</li>
+                  <li><strong>연락처:</strong> 카카오톡 채널 또는 인스타그램 DM</li>
+                </ul>
+
+                <button className="modal-close" onClick={closeModal}>닫기</button>
+              </div>
+            ) : modal === 'refund' ? (
+              <div className="legal-content">
+                <h2>취소 및 환불 규정</h2>
+
+                <p className="legal-notice">본 서비스는 한정된 인원과 성비를 1:1로 매칭하여 운영되는 <strong>'예약제 특수 서비스 상품'</strong>입니다. 예약 확정 시점부터 해당 인원을 위한 대관 및 세팅이 진행되므로, 공정거래위원회 소비자분쟁해결기준을 준수하여 아래와 같은 환불 규정을 적용합니다.</p>
+
+                <h3>환불 기준</h3>
+                <ul>
+                  <li><strong>행사 7일 전까지:</strong> 취소 시 100% 환불</li>
+                  <li><strong>행사 6일 전 ~ 당일:</strong> 일정 변경 및 환불 절대 불가 (노쇼 및 타인 양도 불가)</li>
+                </ul>
+
+                <div className="legal-example">
+                  <p><strong>환불 기준 예시</strong></p>
+                  <p>파티일이 2월 21일(토)인 경우</p>
+                  <ul>
+                    <li>2월 14일(토) 23:59까지 취소 시 → 100% 환불 가능</li>
+                    <li>2월 15일(일) 00:00부터 취소 시 → 환불 및 일정 변경 불가<br /><span className="legal-note">이는 개인 사정(질병, 사고, 업무 등)을 포함한 모든 경우에 해당합니다.</span></li>
+                  </ul>
+                </div>
+
+                <h3>기타 환불 사항</h3>
+                <ul>
+                  <li><strong>미승인 환불:</strong> 주최 측의 선별 과정에서 승인이 거절된 경우, 입금액은 영업일 기준 48시간 이내 100% 환불됩니다.</li>
+                  <li><strong>행사 취소:</strong> 주최 측 사정으로 행사가 취소될 경우 전액 환불됩니다.</li>
+                </ul>
+
+                <button className="modal-close" onClick={closeModal}>닫기</button>
+              </div>
             ) : submitSuccess ? (
               <>
                 <div className="form-success-icon">&#x2714;</div>
-                <h2 className="form-success-title">신청이 완료되었습니다!</h2>
+                <h2 className="form-success-title">Midnight in Sadang<br />신청서 작성 감사합니다.</h2>
                 <p className="form-success-message">
-                  관리자 확인 후 입금 안내 문자가 발송됩니다.<br />
-                  문자가 오지 않을 경우 문의처로 연락해주세요.
+                  소중한 인연을 모시는 만큼, 입금 완료 후 세심한 파티 심사를 거쳐 최종 승인 안내를 드리고 있습니다.
+                </p>
+                <div className="form-success-info">
+                  <h4>입금 및 승인 안내</h4>
+                  <ul>
+                    <li>신청 후 1시간 이내 입금 시 심사가 시작됩니다.</li>
+                    <li>카카오뱅크 0000-0000-0000 (000)</li>
+                    <li>입금자명은 반드시 <strong>성함(핸드폰 뒷자리)</strong> 형태로 입력해 주세요. (ex. 0004885)</li>
+                    <li>최종 미승인 시 결제 금액은 100% 전액 환불됩니다.</li>
+                  </ul>
+                </div>
+                <p className="form-success-note">
+                  인연의 시작을 위해 이 화면을 캡처해 잠시만 기다려 주세요.<br />
+                  곧 좋은 소식으로 연락드리겠습니다.
                 </p>
                 <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
               </>
             ) : (
               <>
-                <h2>파티 신청서</h2>
+                <h2>파티 참가 신청서</h2>
                 <p className="form-subtitle">모든 항목을 정확히 입력해주세요</p>
 
+                {/* 1. 성함 */}
                 <div className="form-group">
-                  <label className="form-label">성함 <span className="required">*</span></label>
+                  <label className="form-label">성함 (실명) <span className="required">*</span></label>
                   <input type="text" className={`form-input ${formErrors.name ? 'error' : ''}`}
                     placeholder="이름을 입력해주세요" value={formData.name}
                     onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} />
                   {formErrors.name && <p className="form-error">{formErrors.name}</p>}
                 </div>
 
+                {/* 2. 성별 */}
                 <div className="form-group">
                   <label className="form-label">성별 <span className="required">*</span></label>
                   <div className="form-radio-group">
@@ -604,6 +775,7 @@ function App() {
                   {formErrors.gender && <p className="form-error">{formErrors.gender}</p>}
                 </div>
 
+                {/* 3. 생년월일 */}
                 <div className="form-group">
                   <label className="form-label">생년월일 <span className="required">*</span></label>
                   <input type="date" className={`form-input ${formErrors.birthDate ? 'error' : ''}`}
@@ -612,6 +784,7 @@ function App() {
                   {formErrors.birthDate && <p className="form-error">{formErrors.birthDate}</p>}
                 </div>
 
+                {/* 4. 연락처 */}
                 <div className="form-group">
                   <label className="form-label">연락처 <span className="required">*</span></label>
                   <input type="tel" className={`form-input ${formErrors.phone ? 'error' : ''}`}
@@ -620,23 +793,28 @@ function App() {
                   {formErrors.phone && <p className="form-error">{formErrors.phone}</p>}
                 </div>
 
+                {/* 5. 거주지 */}
                 <div className="form-group">
-                  <label className="form-label">인스타 ID</label>
-                  <div className="form-insta-row">
-                    <input type="text" className={`form-input ${formErrors.instagramId ? 'error' : ''}`}
-                      placeholder="@username" value={formData.instagramId} disabled={formData.noInstagram}
-                      onChange={e => setFormData(p => ({ ...p, instagramId: e.target.value }))} />
-                    <label className="form-checkbox">
-                      <input type="checkbox" checked={formData.noInstagram}
-                        onChange={e => setFormData(p => ({ ...p, noInstagram: e.target.checked, instagramId: '' }))} />
-                      없음
-                    </label>
-                  </div>
-                  {formErrors.instagramId && <p className="form-error">{formErrors.instagramId}</p>}
+                  <label className="form-label">거주지 <span className="required">*</span></label>
+                  <input type="text" className={`form-input ${formErrors.location ? 'error' : ''}`}
+                    placeholder="예: 서울시 동작구" value={formData.location}
+                    onChange={e => setFormData(p => ({ ...p, location: e.target.value }))} />
+                  {formErrors.location && <p className="form-error">{formErrors.location}</p>}
                 </div>
 
+                {/* 6. 직업 */}
                 <div className="form-group">
-                  <label className="form-label">신체정보 <span className="required">*</span></label>
+                  <label className="form-label">직업 <span className="required">*</span></label>
+                  <input type="text" className={`form-input ${formErrors.job ? 'error' : ''}`}
+                    placeholder="구체적으로 기재해주세요" value={formData.job}
+                    onChange={e => setFormData(p => ({ ...p, job: e.target.value }))} />
+                  <p className="form-hint">어떤 일을 하시는지 알려주시면 더욱 풍성한 대화가 가능하도록 참고하겠습니다</p>
+                  {formErrors.job && <p className="form-error">{formErrors.job}</p>}
+                </div>
+
+                {/* 7. 키/몸무게 */}
+                <div className="form-group">
+                  <label className="form-label">키 / 몸무게 <span className="required">*</span></label>
                   <div className="form-body-row">
                     <div className="form-body-field">
                       <input type="number" className={`form-input ${formErrors.height ? 'error' : ''}`}
@@ -654,20 +832,45 @@ function App() {
                   {(formErrors.height || formErrors.weight) && <p className="form-error">{formErrors.height || formErrors.weight}</p>}
                 </div>
 
+                {/* 8. 인스타그램 ID */}
                 <div className="form-group">
-                  <label className="form-label">심사용 사진 <span className="required">*</span></label>
-                  <p className="form-hint">전신 1장 + 얼굴 1장 (각 10MB 이하)</p>
+                  <label className="form-label">인스타그램 ID <span className="required">*</span></label>
+                  <div className="form-insta-row">
+                    <input type="text" className={`form-input ${formErrors.instagramId ? 'error' : ''}`}
+                      placeholder="@username" value={formData.instagramId} disabled={formData.noInstagram}
+                      onChange={e => setFormData(p => ({ ...p, instagramId: e.target.value }))} />
+                    <label className="form-checkbox">
+                      <input type="checkbox" checked={formData.noInstagram}
+                        onChange={e => setFormData(p => ({ ...p, noInstagram: e.target.checked, instagramId: '' }))} />
+                      없음
+                    </label>
+                  </div>
+                  <p className="form-hint">비공개 계정일 경우 신청기간 동안 공개로 전환 부탁드립니다.</p>
+                  {formErrors.instagramId && <p className="form-error">{formErrors.instagramId}</p>}
+                </div>
+
+                {/* 9. 매력 포인트 */}
+                <div className="form-group">
+                  <label className="form-label">본인의 매력 포인트</label>
+                  <textarea className="form-input form-textarea"
+                    placeholder="키워드 3가지 혹은 1~2줄로 어필해주세요 (예: 성격이 밝음, 운동 좋아함, 자기관리 잘함)"
+                    value={formData.charm}
+                    onChange={e => setFormData(p => ({ ...p, charm: e.target.value }))} />
+                </div>
+
+                {/* 10. 선호하는 이성 스타일 */}
+                <div className="form-group">
+                  <label className="form-label">선호하는 이성 스타일</label>
+                  <input type="text" className="form-input"
+                    placeholder="간략하게 기재 (매칭 참고용)" value={formData.preferredStyle}
+                    onChange={e => setFormData(p => ({ ...p, preferredStyle: e.target.value }))} />
+                </div>
+
+                {/* 11. 사진 */}
+                <div className="form-group">
+                  <label className="form-label">확인 및 선별용 사진 <span className="required">*</span></label>
+                  <p className="form-hint">얼굴 1장 + 전신 1장 (얼굴이 선명하게 보이는 전신 혹은 상반신 사진 권장)<br />당신의 매력이 파티의 무드를 완성합니다. 정중한 선별을 위해 본인의 분위기가 잘 드러나는 사진을 공유해 주세요.</p>
                   <div className="form-photo-row">
-                    <div className="form-photo-upload">
-                      <label className={`form-photo-label ${formErrors.bodyPhoto ? 'error' : ''}`}>
-                        {bodyPreview
-                          ? <img src={bodyPreview} alt="전신" />
-                          : <><span className="photo-icon">&#x1F4F7;</span><span>전신 사진</span></>}
-                        <input type="file" accept="image/*" className="form-file-input"
-                          onChange={e => { const f = e.target.files?.[0]; if (f) { setBodyPhoto(f); setBodyPreview(URL.createObjectURL(f)) } }} />
-                      </label>
-                      {formErrors.bodyPhoto && <p className="form-error">{formErrors.bodyPhoto}</p>}
-                    </div>
                     <div className="form-photo-upload">
                       <label className={`form-photo-label ${formErrors.facePhoto ? 'error' : ''}`}>
                         {facePreview
@@ -678,7 +881,81 @@ function App() {
                       </label>
                       {formErrors.facePhoto && <p className="form-error">{formErrors.facePhoto}</p>}
                     </div>
+                    <div className="form-photo-upload">
+                      <label className={`form-photo-label ${formErrors.bodyPhoto ? 'error' : ''}`}>
+                        {bodyPreview
+                          ? <img src={bodyPreview} alt="전신" />
+                          : <><span className="photo-icon">&#x1F4F7;</span><span>전신 사진</span></>}
+                        <input type="file" accept="image/*" className="form-file-input"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) { setBodyPhoto(f); setBodyPreview(URL.createObjectURL(f)) } }} />
+                      </label>
+                      {formErrors.bodyPhoto && <p className="form-error">{formErrors.bodyPhoto}</p>}
+                    </div>
                   </div>
+                </div>
+
+                {/* 12. 신청경로 */}
+                <div className="form-group">
+                  <label className="form-label">신청경로</label>
+                  <select className="form-input form-select" value={formData.referralSource}
+                    onChange={e => setFormData(p => ({ ...p, referralSource: e.target.value }))}>
+                    <option value="">선택해주세요</option>
+                    <option value="인스타그램 광고">인스타그램 광고</option>
+                    <option value="지인 추천">지인 추천</option>
+                    <option value="블로그">블로그</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </div>
+
+                {/* ===== 동의 섹션 ===== */}
+                <div className="form-divider" />
+
+                {/* 13. 주류 대리구매 동의 */}
+                <div className="form-group">
+                  <label className="form-label">주류 대리구매 및 제공 동의 <span className="required">*</span></label>
+                  <p className="form-hint">게스트분들의 편의를 위해 주류/음료/생수는 미드나잇인사당 측에서 일괄적으로 대리구매를 진행하고 있습니다. (제공되는 주류는 운영진의 대리구매를 통한 무상 서비스입니다.)</p>
+                  <label className="form-agree">
+                    <input type="checkbox" checked={formData.agreeAlcohol}
+                      onChange={e => setFormData(p => ({ ...p, agreeAlcohol: e.target.checked }))} />
+                    <span>참가비를 통한 주류 대리구매에 동의합니다</span>
+                  </label>
+                  {formErrors.agreeAlcohol && <p className="form-error">{formErrors.agreeAlcohol}</p>}
+                </div>
+
+                {/* 14. 파티 이용 규정 동의 */}
+                <div className="form-group">
+                  <label className="form-label">파티 이용 규정 및 약관 동의 <span className="required">*</span></label>
+                  <div className="form-agree-link" onClick={() => openLegalFromForm('terms')}>이용약관 보기 &gt;</div>
+                  <label className="form-agree">
+                    <input type="checkbox" checked={formData.agreeTerms}
+                      onChange={e => setFormData(p => ({ ...p, agreeTerms: e.target.checked }))} />
+                    <span>파티 이용 규정에 동의합니다</span>
+                  </label>
+                  {formErrors.agreeTerms && <p className="form-error">{formErrors.agreeTerms}</p>}
+                </div>
+
+                {/* 15. 개인정보 동의 */}
+                <div className="form-group">
+                  <label className="form-label">개인정보 수집 및 이용 동의 <span className="required">*</span></label>
+                  <div className="form-agree-link" onClick={() => openLegalFromForm('privacy')}>개인정보처리방침 보기 &gt;</div>
+                  <label className="form-agree">
+                    <input type="checkbox" checked={formData.agreePrivacy}
+                      onChange={e => setFormData(p => ({ ...p, agreePrivacy: e.target.checked }))} />
+                    <span>개인정보 수집 및 이용에 동의합니다</span>
+                  </label>
+                  {formErrors.agreePrivacy && <p className="form-error">{formErrors.agreePrivacy}</p>}
+                </div>
+
+                {/* 16. 환불 규정 동의 */}
+                <div className="form-group">
+                  <label className="form-label">취소 및 환불 규정 동의 <span className="required">*</span></label>
+                  <div className="form-agree-link" onClick={() => openLegalFromForm('refund')}>취소 및 환불 규정 보기 &gt;</div>
+                  <label className="form-agree">
+                    <input type="checkbox" checked={formData.agreeRefund}
+                      onChange={e => setFormData(p => ({ ...p, agreeRefund: e.target.checked }))} />
+                    <span>취소 및 환불 규정을 확인하였으며 이에 동의합니다</span>
+                  </label>
+                  {formErrors.agreeRefund && <p className="form-error">{formErrors.agreeRefund}</p>}
                 </div>
 
                 {formErrors.submit && <p className="form-error form-submit-error">{formErrors.submit}</p>}
