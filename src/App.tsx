@@ -63,13 +63,17 @@ function getCalendarDays(year: number, month: number) {
 
 // ===== Sample Data =====
 const EVENTS = [
-  { date: '2.14(금) ~ 2.15(토)', label: '2월 14일', status: 'open' as const, male: { current: 12, max: 24 }, female: { current: 16, max: 24 } },
-  { date: '2.21(금) ~ 2.22(토)', label: '2월 21일', status: 'open' as const, male: { current: 4, max: 24 }, female: { current: 9, max: 24 } },
-  { date: '2.28(금) ~ 3.1(토)', label: '2월 28일', status: 'open' as const, male: { current: 0, max: 25 }, female: { current: 0, max: 25 } },
-  { date: '2.7(금) ~ 2.8(토)', label: '2월 7일', status: 'closed' as const, male: { current: 24, max: 24 }, female: { current: 24, max: 24 } },
+  { date: '3.14(토)', label: '3월 14일', status: 'open' as const, male: { current: 0, max: 24 }, female: { current: 0, max: 24 } },
+  { date: '3.21(토)', label: '3월 21일', status: 'open' as const, male: { current: 0, max: 24 }, female: { current: 0, max: 24 } },
+  { date: '3.28(토)', label: '3월 28일', status: 'open' as const, male: { current: 0, max: 24 }, female: { current: 0, max: 24 } },
+  { date: '4.4(토)', label: '4월 4일', status: 'open' as const, male: { current: 0, max: 24 }, female: { current: 0, max: 24 } },
 ]
 
-const EVENT_DAYS = [7, 8, 14, 15, 21, 22, 28]
+// Calendar highlight days: { month(0-indexed): [days] }
+const EVENT_CALENDAR: Record<string, number[]> = {
+  '2026-2': [14, 21, 28],  // March
+  '2026-3': [4],            // April
+}
 
 const QNA_DATA = [
   { q: '혼자 참여해도 어색하지 않을까요?', a: '네, 신청자의 약 70~80%가 혼자 방문하십니다. 모든 분이 자연스럽게 대화에 참여하실 수 있도록 체계적인 로테이션 프로그램과 합석 매칭 시스템이 준비되어 있으니 걱정 없이 오셔도 됩니다.' },
@@ -209,7 +213,10 @@ function App() {
       setSubmitSuccess(true)
     } catch (err: any) {
       console.error('Registration failed:', err)
-      setFormErrors({ submit: '신청 중 오류가 발생했습니다. 다시 시도해주세요.' })
+      const msg = err?.message?.includes('column')
+        ? '서버 설정 오류입니다. 관리자에게 문의해주세요.'
+        : '신청 중 오류가 발생했습니다. 다시 시도해주세요.'
+      setFormErrors({ submit: msg })
     } finally {
       setSubmitting(false)
     }
@@ -295,7 +302,8 @@ function App() {
               if (day === null) return <div key={`e${i}`} className="calendar-day empty" />
               const isToday = calYear === today.getFullYear() && calMonth === today.getMonth() && day === today.getDate()
               const dayOfWeek = (i) % 7
-              const hasEvent = calYear === 2026 && calMonth === 1 && EVENT_DAYS.includes(day)
+              const eventDays = EVENT_CALENDAR[`${calYear}-${calMonth}`] || []
+              const hasEvent = eventDays.includes(day)
               return (
                 <div
                   key={i}
