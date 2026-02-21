@@ -63,10 +63,10 @@ function getCalendarDays(year: number, month: number) {
 
 // ===== Sample Data =====
 const EVENT_DATES = [
-  { date: '3.14(토)', label: '3월 14일', key: '2026-03-14', max: 24 },
-  { date: '3.21(토)', label: '3월 21일', key: '2026-03-21', max: 24 },
-  { date: '3.28(토)', label: '3월 28일', key: '2026-03-28', max: 24 },
-  { date: '4.4(토)', label: '4월 4일', key: '2026-04-04', max: 24 },
+  { date: '3.14(토)', label: '3월 14일', key: '2026-03-14' },
+  { date: '3.21(토)', label: '3월 21일', key: '2026-03-21' },
+  { date: '3.28(토)', label: '3월 28일', key: '2026-03-28' },
+  { date: '4.4(토)', label: '4월 4일', key: '2026-04-04' },
 ]
 
 // Calendar highlight days: { month(0-indexed): [days] }
@@ -92,28 +92,20 @@ function App() {
   const [prevModal, setPrevModal] = useState<typeof modal>(null)
   const [heroLoaded, setHeroLoaded] = useState(false)
 
-  // ===== Event Counts (from Supabase) =====
-  const [eventCounts, setEventCounts] = useState<Record<string, { male: number; female: number }>>({})
+  // ===== Event Settings (from Supabase) =====
+  const [eventSettings, setEventSettings] = useState<Record<string, { male_count: number; female_count: number; male_max: number; female_max: number }>>({})
 
-  const fetchEventCounts = useCallback(async () => {
+  const fetchEventSettings = useCallback(async () => {
     try {
-      const { data } = await supabase
-        .from('registrations')
-        .select('event_date, gender')
-        .eq('status', 'approved')
+      const { data } = await supabase.from('event_settings').select('*')
       if (!data) return
-      const counts: Record<string, { male: number; female: number }> = {}
-      data.forEach(r => {
-        if (!r.event_date) return
-        if (!counts[r.event_date]) counts[r.event_date] = { male: 0, female: 0 }
-        if (r.gender === 'male') counts[r.event_date].male++
-        else if (r.gender === 'female') counts[r.event_date].female++
-      })
-      setEventCounts(counts)
-    } catch (e) { console.error('Failed to fetch counts:', e) }
+      const settings: Record<string, { male_count: number; female_count: number; male_max: number; female_max: number }> = {}
+      data.forEach(r => { settings[r.event_date] = r })
+      setEventSettings(settings)
+    } catch (e) { console.error('Failed to fetch event settings:', e) }
   }, [])
 
-  useEffect(() => { fetchEventCounts() }, [fetchEventCounts])
+  useEffect(() => { fetchEventSettings() }, [fetchEventSettings])
 
   // ===== Registration Form State =====
   const [formData, setFormData] = useState({
@@ -352,12 +344,12 @@ function App() {
 
         <div className="event-list">
           {EVENT_DATES.map((ev, i) => {
-            const counts = eventCounts[ev.key] || { male: 0, female: 0 }
-            const totalCurrent = counts.male + counts.female
-            const totalMax = ev.max * 2
-            const malePercent = ev.max > 0 ? (counts.male / ev.max) * 100 : 0
-            const femalePercent = ev.max > 0 ? (counts.female / ev.max) * 100 : 0
-            const isFull = counts.male >= ev.max && counts.female >= ev.max
+            const s = eventSettings[ev.key] || { male_count: 0, female_count: 0, male_max: 24, female_max: 24 }
+            const totalCurrent = s.male_count + s.female_count
+            const totalMax = s.male_max + s.female_max
+            const malePercent = s.male_max > 0 ? (s.male_count / s.male_max) * 100 : 0
+            const femalePercent = s.female_max > 0 ? (s.female_count / s.female_max) * 100 : 0
+            const isFull = s.male_count >= s.male_max && s.female_count >= s.female_max
             return (
               <div key={i} className="event-item">
                 <div className="event-top">
@@ -376,14 +368,14 @@ function App() {
                     <div className="gauge-bar">
                       <div className="gauge-fill male" style={{ width: `${Math.min(malePercent, 100)}%` }} />
                     </div>
-                    <span className="gauge-count">{counts.male}/{ev.max}</span>
+                    <span className="gauge-count">{s.male_count}/{s.male_max}</span>
                   </div>
                   <div className="event-gauge-row">
                     <span className="gauge-label female">여</span>
                     <div className="gauge-bar">
                       <div className="gauge-fill female" style={{ width: `${Math.min(femalePercent, 100)}%` }} />
                     </div>
-                    <span className="gauge-count">{counts.female}/{ev.max}</span>
+                    <span className="gauge-count">{s.female_count}/{s.female_max}</span>
                   </div>
                 </div>
               </div>
