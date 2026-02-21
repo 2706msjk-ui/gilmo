@@ -92,10 +92,28 @@
     /* Loading */
     .loading { text-align: center; padding: 60px; color: #666; }
 
+    /* Approve Only Button */
+    .btn-approve-only { background: transparent; border: 1px solid #c9a55a; color: #c9a55a; }
+    .btn-approve-only:hover { background: rgba(201,165,90,0.15); }
+
+    /* Event Counts Panel */
+    .event-counts-panel { padding: 16px 24px; }
+    .event-counts-panel h3 { color: #c9a55a; font-size: 14px; margin-bottom: 12px; letter-spacing: 1px; }
+    .event-counts-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .event-count-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; text-align: center; }
+    .event-count-date { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .event-count-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .event-count-gender { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .event-count-gender.male { background: rgba(74,158,255,0.15); color: #4a9eff; }
+    .event-count-gender.female { background: rgba(255,107,157,0.15); color: #ff6b9d; }
+    .event-count-num { font-size: 14px; font-weight: 600; color: #ccc; }
+    .event-count-total { margin-top: 8px; font-size: 12px; color: #888; border-top: 1px solid #2a2a2a; padding-top: 8px; }
+
     @media (max-width: 600px) {
       .card-grid { grid-template-columns: 1fr; padding: 16px; }
       .admin-header { flex-wrap: wrap; gap: 8px; }
       .admin-header .stats { font-size: 12px; }
+      .event-counts-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -158,16 +176,28 @@
       }
     }
 
+    // ===== Approve Only =====
+    async function approveOnly(id) {
+      await updateStatus(id, 'approved')
+      render()
+    }
+
     // ===== Approve & Open SMS Modal =====
     function openSmsModal(reg) {
       updateStatus(reg.id, 'approved')
       const defaultMsg =
         `[MIDNIGHT] 승인 안내\n` +
-        `${reg.name}님, 미드나잇(MIDNIGHT) 멤버로 확정되셨습니다.\n\n` +
-        `입금 안내:\n` +
-        `- 카카오뱅크 0000-0000-0000 (000)\n` +
-        `- 입금자명: 성함(핸드폰 뒷자리)\n\n` +
-        `입금 확인 후 최종 안내 문자를 보내드립니다.`
+        `${reg.name}님, 미드나잇(MIDNIGHT) 멤버로 확정되셨습니다.\n` +
+        `안녕하세요, 호스트 00입니다.\n` +
+        `기대하고 오시는 만큼, 좋은 대화와 만남이 가득한 미드나잇의 밤을 선물하겠습니다.\n\n` +
+        `⚠️ 정시 도착 안내 (필독)\n` +
+        `1부 '미드나잇 스캔'은 모든 멤버가 동시에 시작하는 핵심 프로그램입니다. 원활한 진행을 위해 반드시 정시에 맞춰 도착해 주세요. 지연 시 프로그램 참여가 어려울 수 있습니다.\n\n` +
+        `🌙 디지털 초대장 (장소/드레스코드)\n` +
+        `▶ {링크}\n\n` +
+        `[체크리스트]\n` +
+        `• 신분증 필수 (실물 혹은 모바일)\n` +
+        `• 10분 전 도착 권장 (여유로운 입장을 위해)\n\n` +
+        `서로의 시간을 존중하는 마음으로, 그날 미드나잇에서 뵙겠습니다.`
 
       smsModal = { id: reg.id, name: reg.name, phone: reg.phone }
       smsText = defaultMsg
@@ -209,6 +239,36 @@
 
       smsSending = false
       render()
+    }
+
+    // ===== Event Dates Config =====
+    const EVENT_DATES_CONFIG = [
+      { key: '2026-03-14', label: '3.14(토)', max: 24 },
+      { key: '2026-03-21', label: '3.21(토)', max: 24 },
+      { key: '2026-03-28', label: '3.28(토)', max: 24 },
+      { key: '2026-04-04', label: '4.4(토)', max: 24 },
+    ]
+
+    function getEventCountsHtml() {
+      const approved = registrations.filter(r => r.status === 'approved')
+      return EVENT_DATES_CONFIG.map(ev => {
+        const male = approved.filter(r => r.event_date === ev.key && r.gender === 'male').length
+        const female = approved.filter(r => r.event_date === ev.key && r.gender === 'female').length
+        return `
+          <div class="event-count-card">
+            <div class="event-count-date">${ev.label}</div>
+            <div class="event-count-row">
+              <span class="event-count-gender male">남</span>
+              <span class="event-count-num">${male}/${ev.max}</span>
+            </div>
+            <div class="event-count-row">
+              <span class="event-count-gender female">여</span>
+              <span class="event-count-num">${female}/${ev.max}</span>
+            </div>
+            <div class="event-count-total">합계 ${male + female}/${ev.max * 2}</div>
+          </div>
+        `
+      }).join('')
     }
 
     // ===== Format Date =====
@@ -266,6 +326,13 @@
           ).join('')}
         </div>
 
+        <div class="event-counts-panel">
+          <h3>이벤트별 승인 현황</h3>
+          <div class="event-counts-grid">
+            ${getEventCountsHtml()}
+          </div>
+        </div>
+
         ${filtered.length === 0
           ? '<div class="empty-state"><p>신청 내역이 없습니다.</p></div>'
           : `<div class="card-grid">${filtered.map(renderCard).join('')}</div>`
@@ -314,6 +381,8 @@
               <span class="card-status-badge ${status}">${statusLabel}</span>
             </div>
             <dl class="card-info">
+              <dt>참가날짜</dt><dd>${reg.event_date || '-'}</dd>
+              <dt>참여구분</dt><dd>${escHtml(reg.participation_type || '-')}</dd>
               <dt>생년월일</dt><dd>${reg.birth_date || '-'}</dd>
               <dt>연락처</dt><dd>${formatPhone(reg.phone)}</dd>
               <dt>거주지</dt><dd>${escHtml(reg.location || '-')}</dd>
@@ -327,6 +396,7 @@
             <div class="card-date">신청일: ${formatDate(reg.created_at)}${reg.sms_sent ? ' | SMS 발송완료' : ''}</div>
             <div class="card-actions">
               ${isPending ? `
+                <button class="btn btn-approve-only" onclick="approveOnly('${reg.id}')">승인</button>
                 <button class="btn btn-approve" onclick="openSmsModal(registrations.find(r=>r.id==='${reg.id}'))">승인 + 문자</button>
                 <button class="btn btn-reject" onclick="rejectReg('${reg.id}')">거절</button>
               ` : status === 'approved' && !reg.sms_sent ? `

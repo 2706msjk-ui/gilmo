@@ -62,11 +62,11 @@ function getCalendarDays(year: number, month: number) {
 }
 
 // ===== Sample Data =====
-const EVENTS = [
-  { date: '3.14(토)', label: '3월 14일', status: 'open' as const, male: { current: 0, max: 24 }, female: { current: 0, max: 24 } },
-  { date: '3.21(토)', label: '3월 21일', status: 'open' as const, male: { current: 0, max: 24 }, female: { current: 0, max: 24 } },
-  { date: '3.28(토)', label: '3월 28일', status: 'open' as const, male: { current: 0, max: 24 }, female: { current: 0, max: 24 } },
-  { date: '4.4(토)', label: '4월 4일', status: 'open' as const, male: { current: 0, max: 24 }, female: { current: 0, max: 24 } },
+const EVENT_DATES = [
+  { date: '3.14(토)', label: '3월 14일', key: '2026-03-14', max: 24 },
+  { date: '3.21(토)', label: '3월 21일', key: '2026-03-21', max: 24 },
+  { date: '3.28(토)', label: '3월 28일', key: '2026-03-28', max: 24 },
+  { date: '4.4(토)', label: '4월 4일', key: '2026-04-04', max: 24 },
 ]
 
 // Calendar highlight days: { month(0-indexed): [days] }
@@ -92,12 +92,36 @@ function App() {
   const [prevModal, setPrevModal] = useState<typeof modal>(null)
   const [heroLoaded, setHeroLoaded] = useState(false)
 
+  // ===== Event Counts (from Supabase) =====
+  const [eventCounts, setEventCounts] = useState<Record<string, { male: number; female: number }>>({})
+
+  const fetchEventCounts = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from('registrations')
+        .select('event_date, gender')
+        .eq('status', 'approved')
+      if (!data) return
+      const counts: Record<string, { male: number; female: number }> = {}
+      data.forEach(r => {
+        if (!r.event_date) return
+        if (!counts[r.event_date]) counts[r.event_date] = { male: 0, female: 0 }
+        if (r.gender === 'male') counts[r.event_date].male++
+        else if (r.gender === 'female') counts[r.event_date].female++
+      })
+      setEventCounts(counts)
+    } catch (e) { console.error('Failed to fetch counts:', e) }
+  }, [])
+
+  useEffect(() => { fetchEventCounts() }, [fetchEventCounts])
+
   // ===== Registration Form State =====
   const [formData, setFormData] = useState({
     name: '', birthDate: '', gender: '' as '' | 'male' | 'female',
+    eventDate: '',
     phone: '', location: '', job: '', height: '', weight: '',
     instagramId: '', noInstagram: false,
-    charm: '', preferredStyle: '', referralSource: '',
+    charm: '', preferredStyle: '', participationType: '', referralSource: '',
     agreeAlcohol: false, agreeTerms: false, agreePrivacy: false, agreeRefund: false,
   })
   const [bodyPhoto, setBodyPhoto] = useState<File | null>(null)
@@ -134,7 +158,7 @@ function App() {
   const openRegistration = () => {
     if (bodyPreview) URL.revokeObjectURL(bodyPreview)
     if (facePreview) URL.revokeObjectURL(facePreview)
-    setFormData({ name: '', birthDate: '', gender: '', phone: '', location: '', job: '', height: '', weight: '', instagramId: '', noInstagram: false, charm: '', preferredStyle: '', referralSource: '', agreeAlcohol: false, agreeTerms: false, agreePrivacy: false, agreeRefund: false })
+    setFormData({ name: '', birthDate: '', gender: '', eventDate: '', phone: '', location: '', job: '', height: '', weight: '', instagramId: '', noInstagram: false, charm: '', preferredStyle: '', participationType: '', referralSource: '', agreeAlcohol: false, agreeTerms: false, agreePrivacy: false, agreeRefund: false })
     setBodyPhoto(null); setFacePhoto(null)
     setBodyPreview(''); setFacePreview('')
     setFormErrors({}); setSubmitSuccess(false)
@@ -146,9 +170,10 @@ function App() {
     const errors: Record<string, string> = {}
     if (!formData.name.trim()) errors.name = '성함을 입력해주세요'
     if (!formData.gender) errors.gender = '성별을 선택해주세요'
-    if (!formData.birthDate) errors.birthDate = '생년월일을 선택해주세요'
-    if (formData.birthDate && formData.gender) {
-      const y = parseInt(formData.birthDate.split('-')[0])
+    if (!formData.eventDate) errors.eventDate = '참가 희망 날짜를 선택해주세요'
+    if (!formData.birthDate || formData.birthDate.length !== 8) errors.birthDate = '생년월일 8자리를 입력해주세요'
+    if (formData.birthDate.length === 8 && formData.gender) {
+      const y = parseInt(formData.birthDate.slice(0, 4))
       if (formData.gender === 'male' && (y < 1990 || y > 2004)) errors.birthDate = '남성은 90~04년생만 신청 가능합니다'
       if (formData.gender === 'female' && (y < 1992 || y > 2005)) errors.birthDate = '여성은 92~05년생만 신청 가능합니다'
     }
@@ -159,6 +184,7 @@ function App() {
     if (!formData.height.trim()) errors.height = '키를 입력해주세요'
     if (!formData.weight.trim()) errors.weight = '몸무게를 입력해주세요'
     if (!formData.noInstagram && !formData.instagramId.trim()) errors.instagramId = '인스타 ID를 입력하거나 "없음"을 선택해주세요'
+    if (!formData.participationType) errors.participationType = '참여 구분을 선택해주세요'
     if (!bodyPhoto) errors.bodyPhoto = '전신 사진을 업로드해주세요'
     if (!facePhoto) errors.facePhoto = '얼굴 사진을 업로드해주세요'
     if (!formData.agreeAlcohol) errors.agreeAlcohol = '주류 대리구매 동의는 필수입니다'
@@ -194,8 +220,9 @@ function App() {
 
       const { error } = await supabase.from('registrations').insert({
         name: formData.name.trim(),
-        birth_date: formData.birthDate,
+        birth_date: `${formData.birthDate.slice(0,4)}-${formData.birthDate.slice(4,6)}-${formData.birthDate.slice(6,8)}`,
         gender: formData.gender,
+        event_date: formData.eventDate,
         phone: formData.phone.replace(/\D/g, ''),
         location: formData.location.trim(),
         job: formData.job.trim(),
@@ -204,6 +231,7 @@ function App() {
         instagram_id: formData.noInstagram ? '없음' : formData.instagramId.trim(),
         charm: formData.charm.trim(),
         preferred_style: formData.preferredStyle.trim(),
+        participation_type: formData.participationType,
         referral_source: formData.referralSource.trim(),
         body_photo_url: bodyUrl,
         face_photo_url: faceUrl,
@@ -274,13 +302,13 @@ function App() {
             }} />
           ))}
         </div>
-        <p className="hero-tagline hero-anim" style={{ animationDelay: '0.2s' }}>2030 프리미엄 솔로 파티 | 외모 승인제 | 대화 중심 | 매칭 시스템</p>
+        <p className="hero-tagline hero-anim" style={{ animationDelay: '0.2s' }}>2030 프리미엄 솔로 파티 | 외모 승인제 | 대화 중심</p>
         <h1 className="hero-brand hero-anim" style={{ animationDelay: '0.5s' }}>MIDNIGHT IN SADANG</h1>
         <p className="hero-description hero-anim" style={{ animationDelay: '0.8s' }}>
-          밤이 깊어질수록, 대화는 더 선명해집니다.
+          당신의 설렘이 시작되는 곳
         </p>
         <p className="hero-sub hero-anim" style={{ animationDelay: '1.0s' }}>
-          엄선된 사람들과 마주하는 가장 아름다운 순간,<br />온전한 설렘이 시작되는 MIDNIGHT IN SADANG
+          엄선된 사람들과 함께하는 특별한 밤
         </p>
         <div className="hero-scroll hero-anim" style={{ animationDelay: '1.3s' }}>SCROLL</div>
       </section>
@@ -323,16 +351,18 @@ function App() {
         </div>
 
         <div className="event-list">
-          {EVENTS.map((ev, i) => {
-            const totalCurrent = ev.male.current + ev.female.current
-            const totalMax = ev.male.max + ev.female.max
-            const malePercent = ev.male.max > 0 ? (ev.male.current / ev.male.max) * 100 : 0
-            const femalePercent = ev.female.max > 0 ? (ev.female.current / ev.female.max) * 100 : 0
+          {EVENT_DATES.map((ev, i) => {
+            const counts = eventCounts[ev.key] || { male: 0, female: 0 }
+            const totalCurrent = counts.male + counts.female
+            const totalMax = ev.max * 2
+            const malePercent = ev.max > 0 ? (counts.male / ev.max) * 100 : 0
+            const femalePercent = ev.max > 0 ? (counts.female / ev.max) * 100 : 0
+            const isFull = counts.male >= ev.max && counts.female >= ev.max
             return (
               <div key={i} className="event-item">
                 <div className="event-top">
-                  <span className={`event-badge ${ev.status}`}>
-                    {ev.status === 'open' ? '모집중' : '종료'}
+                  <span className={`event-badge ${isFull ? 'closed' : 'open'}`}>
+                    {isFull ? '마감' : '모집중'}
                   </span>
                   <div className="event-info">
                     <div className="event-date">{ev.date}</div>
@@ -344,16 +374,16 @@ function App() {
                   <div className="event-gauge-row">
                     <span className="gauge-label male">남</span>
                     <div className="gauge-bar">
-                      <div className="gauge-fill male" style={{ width: `${malePercent}%` }} />
+                      <div className="gauge-fill male" style={{ width: `${Math.min(malePercent, 100)}%` }} />
                     </div>
-                    <span className="gauge-count">{ev.male.current}/{ev.male.max}</span>
+                    <span className="gauge-count">{counts.male}/{ev.max}</span>
                   </div>
                   <div className="event-gauge-row">
                     <span className="gauge-label female">여</span>
                     <div className="gauge-bar">
-                      <div className="gauge-fill female" style={{ width: `${femalePercent}%` }} />
+                      <div className="gauge-fill female" style={{ width: `${Math.min(femalePercent, 100)}%` }} />
                     </div>
-                    <span className="gauge-count">{ev.female.current}/{ev.female.max}</span>
+                    <span className="gauge-count">{counts.female}/{ev.max}</span>
                   </div>
                 </div>
               </div>
@@ -365,11 +395,17 @@ function App() {
       {/* ===== 4-1. PARTY INTRO ===== */}
       <section className="section" id="intro">
         <h2 className="section-title">About</h2>
-        <p className="section-subtitle">단순한 만남을 넘어, 취향과 분위기가 연결되는 밤</p>
-        <div className="divider" />
+        <p className="section-subtitle">말이 잘 통하는 사람들과<br />몰입하며 나누는 사당의 밤</p>
 
         <p className="intro-description">
-          MIDNIGHT IN SADANG은 가벼운 가십이나 소란스러운 게임보다, 서로의 눈을 맞추며 나누는 깊은 대화의 가치를 믿습니다. 사당의 깊은 밤, 당신과 닮은 매력적인 이성들과의 특별한 조우를 준비했습니다. 단순한 모임을 넘어, 결이 맞는 사람들이 모여 온전한 설렘을 나누는 프리미엄 솔로 파티를 경험해 보세요.
+          억지스러운 텐션이나<br />
+          시끄러운 소음은 빼기로 했어요.<br /><br />
+          서로의 눈을 맞추며 나누는 대화,<br />
+          그 안에서 느껴지는 진짜 설렘.<br /><br />
+          결이 비슷한 사람들이 모여<br />
+          대화의 밀도를 채우는 시간.<br /><br />
+          MIDNIGHT IN SADANG에서<br />
+          당신의 새로운 인연을 만나보세요.
         </p>
 
         <div className="intro-cards" ref={introRef}>
@@ -377,19 +413,34 @@ function App() {
             <div className="intro-card-number">01</div>
             <h3>Selected Beauty</h3>
             <h4 className="intro-card-label">외모 승인제</h4>
-            <p>누구나 꿈꾸지만, 아무나 함께할 수 없는 선별된 만남. 신청 후 정중한 승인 절차를 거쳐 참가가 확정됩니다. 단순히 외적인 인상을 넘어, 파티의 품격과 어우러지는 전반적인 분위기와 매너를 세심하게 고려합니다. 당신이 마주할 상대 또한 엄격하게 선별된 매력적인 분들이기에, 그 어느 곳보다 높은 만족도의 조우를 약속드립니다.</p>
+            <p>
+              모두가 기다려온 검증된 만남<br /><br />
+              신청은 누구나 가능하지만, 참가는 세심한 승인을 거칩니다.<br /><br />
+              단순히 외적인 모습뿐만 아니라 파티에 어울리는 분위기까지 고려합니다<br /><br />
+              당신이 마주할 상대 또한 충분히 매력적인 분임을 약속합니다.
+            </p>
           </div>
           <div className="intro-card stagger-child">
             <div className="intro-card-number">02</div>
             <h3>Deep Connection</h3>
             <h4 className="intro-card-label">대화</h4>
-            <p>한눈에 담고, 깊게 나누는 시간. 소란스러운 게임 대신 대화의 본질에 집중합니다. '미드나잇 스캔'으로 오늘 밤의 모든 인연을 마주하고, '딥 로테이션'을 통해 엄선된 인연들과 밀도 높은 대화를 나눕니다. 겉핥기식 대화가 아닌, 취향과 가치관이 선명히 연결되는 특별한 몰입을 경험하세요. 못다 한 이야기는 2부 자유 시간에서 당신만의 속도로 완성할 수 있습니다.</p>
+            <p>
+              스쳐가는 인사 대신 깊게 스며드는 대화<br /><br />
+              얼굴만 보고 끝나는 자리가 아닙니다. 취향과 가치관이 연결되는 몰입을 경험하세요.<br /><br />
+              '미드나잇 스캔'으로 인연을 발견하고, '딥 로테이션'으로 밀도 있게 대화합니다.<br /><br />
+              더 깊은 이야기는 2부 자유 시간, 당신만의 속도로 이어가면 됩니다.
+            </p>
           </div>
           <div className="intro-card stagger-child">
             <div className="intro-card-number">03</div>
             <h3>Intentional Choice</h3>
             <h4 className="intro-card-label">선택</h4>
-            <p>당신의 직관이 인연으로 완성되는 순간. 1부에서는 '합석 신청' 시스템을 통해 조심스럽게 서로의 호감을 확인하고 자연스러운 연결을 돕습니다. 이어지는 2부에서는 정해진 틀을 벗어나, 당신의 마음이 향하는 이성과 더 깊이 집중할 수 있는 자유 선택 시간이 주어집니다. 스스로 디자인하는 인연의 결실을 확인하세요.</p>
+            <p>
+              눈치 보지 말고 마음이 이끄는 대로<br /><br />
+              누구와 더 대화하고 싶나요? '1부 대화 신청'으로 서로의 호감을 확인하세요.<br /><br />
+              이어지는 '2부 자유 시간', 마음이 향하는 사람에게 집중할 시간입니다.<br /><br />
+              정해진 틀을 벗어나 이제 당신의 인연을 직접 디자인하세요.
+            </p>
           </div>
         </div>
       </section>
@@ -423,7 +474,7 @@ function App() {
           </div>
           <div className="detail-row">
             <div className="detail-label">Dress Code</div>
-            <div className="detail-value">블랙 or 화이트 — 깔끔하며 본인의 매력을 가장 잘 보여주는 스타일</div>
+            <div className="detail-value">블랙 or 화이트 : 본인의 매력을 가장 잘 보여주는 스타일</div>
           </div>
           <div className="detail-row">
             <div className="detail-label">참여비</div>
@@ -431,7 +482,7 @@ function App() {
           </div>
           <div className="detail-row">
             <div className="detail-label">장소</div>
-            <div className="detail-value">사당역 도보 5분 거리 (상세 주소는 참가 확정 시 개별 문자로 발송)</div>
+            <div className="detail-value">사당역 도보 5분 거리 (상세 주소 추후 개별문자 발송)</div>
           </div>
         </div>
       </section>
@@ -443,24 +494,24 @@ function App() {
         <div className="divider" />
 
         <p className="condition-description">
-          단순한 만남을 넘어, 서로에게 기분 좋은 자극과 깊은 대화를 선사할 수 있는 분들과 함께하고자 합니다.
+          단순한 만남을 넘어,<br />서로에게 기분 좋은 자극이 되어줄 분을 찾습니다.
         </p>
 
         <div className="condition-cards" ref={conditionsRef}>
           <div className="condition-card stagger-child">
             <div className="condition-number">01</div>
-            <h4>매력적인 비주얼과<br />고유한 분위기</h4>
-            <p>자신을 가꿀 줄 알고, 본인만의 스타일과 분위기를 가진 분을 선호합니다.</p>
+            <h4>나만의 스타일이<br />선명하신 분</h4>
+            <p>자신을 멋지게 가꿀 줄 알고,<br />고유한 분위기를 가진 분을 선호합니다.</p>
           </div>
           <div className="condition-card stagger-child">
             <div className="condition-number">02</div>
-            <h4>대화의 가치를<br />아는 분</h4>
-            <p>상대방의 이야기를 경청하고 자신의 생각을 조리 있게 나눌 줄 아는 성숙한 분을 기다립니다.</p>
+            <h4>대화의 즐거움을<br />아시는 분</h4>
+            <p>상대방의 이야기에 귀 기울이고,<br />자신의 생각을 조리 있게 나눌 줄 아는 분.</p>
           </div>
           <div className="condition-card stagger-child">
             <div className="condition-number">03</div>
             <h4>타인에 대한<br />매너와 존중</h4>
-            <p>처음 만나는 사람에게 예의를 갖추고, 파티의 분위기를 함께 만들어갈 수 있는 분이어야 합니다.</p>
+            <p>처음 만나는 사람에게 예의를 갖추고,<br />파티의 분위기를 함께 만들어갈 수 있는 분.</p>
           </div>
         </div>
       </section>
@@ -524,24 +575,24 @@ function App() {
       {/* ===== 6. NOTICE ===== */}
       <section className="section" id="notice">
         <h2 className="section-title">Notice</h2>
-        <p className="section-subtitle">파티의 원활한 진행과 쾌적한 환경을 위해 아래 내용을 반드시 확인해 주세요.</p>
+        <p className="section-subtitle">즐거운 파티를 위해 꼭 확인해 주세요.</p>
         <div className="divider" />
 
         <div className="notice-list" ref={noticeRef}>
           <div className="notice-item stagger-child">
-            <strong>01.</strong> <strong>신분증 지참 필수:</strong> 본인 확인 및 연령 확인을 위해 주민등록증, 운전면허증 등 실물 신분증을 반드시 지참해 주세요. (미지참 시 입장이 제한되며, 이로 인한 환불은 불가합니다.)
+            <strong>01.</strong> <strong>신분증 지참 필수</strong><br />본인 확인을 위해 실물 신분증을 꼭 가져와 주세요.<br />(미지참 시 입장 및 환불이 어렵습니다.)
           </div>
           <div className="notice-item stagger-child">
-            <strong>02.</strong> <strong>드레스코드 준수:</strong> 세련된 파티 분위기를 위해 트레이닝복, 슬리퍼, 과도하게 캐주얼한 복장 등은 입장이 제한될 수 있습니다. 본인의 매력을 가장 잘 보여줄 수 있는 룩으로 함께해 주세요.
+            <strong>02.</strong> <strong>드레스코드 준수</strong><br />슬리퍼나 트레이닝복은 입장이 제한될 수 있어요.<br />당신의 매력을 가장 잘 보여줄 룩으로 만나요.
           </div>
           <div className="notice-item stagger-child">
-            <strong>03.</strong> <strong>프로필 정보의 정확성:</strong> 신청 시 작성하신 정보가 허위로 밝혀질 경우, 승인이 취소되거나 현장에서 퇴장 조치될 수 있습니다.
+            <strong>03.</strong> <strong>매너 가이드</strong><br />무례한 언행이나 과도한 음주는 즉시 퇴장 조치됩니다.<br />매너가 매력의 시작임을 잊지 말아 주세요.
           </div>
           <div className="notice-item stagger-child">
-            <strong>04.</strong> <strong>사진 촬영 안내:</strong> 파티 현장 스케치 사진 및 영상 촬영이 진행될 수 있습니다. 촬영본은 마케팅 용도로 활용될 수 있으며, 모든 인물은 블러(모자이크) 처리되어 프라이버시를 보호해 드립니다.
+            <strong>04.</strong> <strong>정확한 정보 입력</strong><br />신청 정보가 사실과 다를 경우 승인이 취소될 수 있습니다.
           </div>
           <div className="notice-item stagger-child">
-            <strong>05.</strong> <strong>매너 가이드:</strong> 과도한 음주, 무례한 언행, 상대방이 원치 않는 신체 접촉이나 연락처 요구 등 타인에게 불쾌감을 주는 행위 적발 시 <span className="warning">즉시 퇴장</span> 조치되며, 향후 모든 파티 참여가 <span className="warning">영구히 제한</span>됩니다.
+            <strong>05.</strong> <strong>사진 촬영 안내</strong><br />현장 스케치 촬영 시 인물은 모두 블러 처리됩니다.<br />여러분의 소중한 프라이버시를 철저히 보호해 드려요.
           </div>
         </div>
       </section>
@@ -570,30 +621,22 @@ function App() {
       {/* ===== 8. CONTACT ===== */}
       <section className="section contact reveal-section" id="contact" ref={contactRef}>
         <h2 className="section-title">Contact</h2>
-        <p className="section-subtitle">문의처</p>
         <div className="divider" />
 
         <p className="contact-message">
-          처음 오시는 분들이 대부분입니다.<br />
-          찰나의 용기가 여러분들의 인생을 변화시킵니다.<br />
-          용기 내서 참여해 보세요. 후회 없는 밤을 만들어드리겠습니다.<br /><br />
-          언제든지 문의사항 있으시면 편하게 연락주세요.
+          대부분 혼자, 그리고 처음입니다.<br />
+          망설임 끝에 낸 작은 용기가<br />
+          기분 좋은 인연으로 이어질 거예요.<br /><br />
+          후회 없는 밤이 되도록<br />
+          우리가 세심하게 준비하겠습니다.<br /><br />
+          궁금한 점은 언제든 편하게 문의해 주세요.<br />
+          MIDNIGHT IN SADANG에서 기다리겠습니다.
         </p>
 
         <div className="contact-icons">
           <a href="https://www.instagram.com/midnight_in_sadang?igsh=MW01ZHFzMmNiYzFjdQ%3D%3D" className="contact-icon" title="Instagram" target="_blank" rel="noopener noreferrer">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-            </svg>
-          </a>
-          <a href="#" className="contact-icon" title="KakaoTalk" target="_blank" rel="noopener noreferrer">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3c-5.523 0-10 3.582-10 8 0 2.822 1.882 5.297 4.727 6.728-.209.783-.756 2.836-.866 3.272-.136.54.199.532.418.387.172-.114 2.742-1.862 3.862-2.621.598.088 1.216.134 1.859.134 5.523 0 10-3.582 10-8s-4.477-8-10-8z"/>
-            </svg>
-          </a>
-          <a href="tel:010-0000-0000" className="contact-icon" title="Phone">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
             </svg>
           </a>
         </div>
@@ -733,9 +776,7 @@ function App() {
               <>
                 <div className="form-success-icon">&#x2714;</div>
                 <h2 className="form-success-title">Midnight in Sadang<br />신청서 작성 감사합니다.</h2>
-                <p className="form-success-message">
-                  소중한 인연을 모시는 만큼, 입금 완료 후 세심한 파티 심사를 거쳐 최종 승인 안내를 드리고 있습니다.
-                </p>
+                <p className="form-success-message"></p>
                 <div className="form-success-info">
                   <h4>입금 및 승인 안내</h4>
                   <ul>
@@ -746,8 +787,7 @@ function App() {
                   </ul>
                 </div>
                 <p className="form-success-note">
-                  인연의 시작을 위해 이 화면을 캡처해 잠시만 기다려 주세요.<br />
-                  곧 좋은 소식으로 연락드리겠습니다.
+                  인연의 시작을 위해 이 화면을 캡처해 잠시만 기다려 주세요.
                 </p>
                 <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
               </>
@@ -783,12 +823,59 @@ function App() {
                   {formErrors.gender && <p className="form-error">{formErrors.gender}</p>}
                 </div>
 
+                {/* 2-1. 참가 희망 날짜 */}
+                <div className="form-group">
+                  <label className="form-label">참가 희망 날짜 <span className="required">*</span></label>
+                  <div className="event-date-buttons">
+                    {EVENT_DATES.map((ev) => (
+                      <button key={ev.key} type="button"
+                        className={`event-date-btn ${formData.eventDate === ev.key ? 'selected' : ''}`}
+                        onClick={() => setFormData(p => ({ ...p, eventDate: ev.key }))}>
+                        {ev.date}
+                      </button>
+                    ))}
+                  </div>
+                  {formData.eventDate && (() => {
+                    const d = new Date(formData.eventDate)
+                    const year = d.getFullYear()
+                    const month = d.getMonth()
+                    const days = getCalendarDays(year, month)
+                    const selectedDay = d.getDate()
+                    const eventDays = EVENT_CALENDAR[`${year}-${month}`] || []
+                    return (
+                      <div className="form-calendar">
+                        <div className="form-calendar-header">{year}년 {month + 1}월</div>
+                        <div className="form-calendar-grid">
+                          {['일','월','화','수','목','금','토'].map(d => <div key={d} className="form-cal-label">{d}</div>)}
+                          {days.map((day, i) => {
+                            if (day === null) return <div key={`e${i}`} className="form-cal-day empty" />
+                            const hasEvent = eventDays.includes(day)
+                            const isSelected = day === selectedDay
+                            return (
+                              <div key={i}
+                                className={['form-cal-day', hasEvent && 'has-event', isSelected && 'selected'].filter(Boolean).join(' ')}
+                                onClick={() => hasEvent && setFormData(p => ({ ...p, eventDate: `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}` }))}>
+                                {day}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                  {formErrors.eventDate && <p className="form-error">{formErrors.eventDate}</p>}
+                </div>
+
                 {/* 3. 생년월일 */}
                 <div className="form-group">
                   <label className="form-label">생년월일 <span className="required">*</span></label>
-                  <input type="date" className={`form-input ${formErrors.birthDate ? 'error' : ''}`}
+                  <input type="text" inputMode="numeric" className={`form-input ${formErrors.birthDate ? 'error' : ''}`}
+                    placeholder="예: 19990101" maxLength={8}
                     value={formData.birthDate}
-                    onChange={e => setFormData(p => ({ ...p, birthDate: e.target.value }))} />
+                    onChange={e => {
+                      const v = e.target.value.replace(/\D/g, '').slice(0, 8)
+                      setFormData(p => ({ ...p, birthDate: v }))
+                    }} />
                   {formErrors.birthDate && <p className="form-error">{formErrors.birthDate}</p>}
                 </div>
 
@@ -902,7 +989,36 @@ function App() {
                   </div>
                 </div>
 
-                {/* 12. 신청경로 */}
+                {/* 12. 참여 구분 */}
+                <div className="form-group">
+                  <label className="form-label">참여 구분 <span className="required">*</span></label>
+                  {!formData.gender ? (
+                    <p className="form-hint">성별을 먼저 선택해주세요</p>
+                  ) : (
+                    <div className="participation-options">
+                      {(formData.gender === 'male' ? [
+                        { value: '1+2차', label: '1+2차 (21:00~02:30)', price: '59,900원' },
+                        { value: '1부', label: '1부 (21:00~00:30)', price: '40,000원' },
+                        { value: '2부', label: '2부 (00:30~02:30)', price: '35,000원' },
+                      ] : [
+                        { value: '1+2차', label: '1+2차 (21:00~02:30)', price: '55,000원' },
+                        { value: '1부', label: '1부 (21:00~00:30)', price: '35,000원' },
+                        { value: '2부', label: '2부 (00:30~02:30)', price: '30,000원' },
+                      ]).map(opt => (
+                        <label key={opt.value}
+                          className={`participation-option ${formData.participationType === opt.value ? 'selected' : ''}`}
+                          onClick={() => setFormData(p => ({ ...p, participationType: opt.value }))}>
+                          <input type="radio" name="participationType" checked={formData.participationType === opt.value} readOnly />
+                          <span className="participation-label">{opt.label}</span>
+                          <span className="participation-price">{opt.price}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {formErrors.participationType && <p className="form-error">{formErrors.participationType}</p>}
+                </div>
+
+                {/* 13. 신청경로 */}
                 <div className="form-group">
                   <label className="form-label">신청경로</label>
                   <select className="form-input form-select" value={formData.referralSource}
