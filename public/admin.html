@@ -167,6 +167,9 @@
 
     // ===== Update Status =====
     async function updateStatus(id, status) {
+      const reg = registrations.find(r => r.id === id)
+      const prevStatus = reg ? reg.status : 'pending'
+
       const { error } = await supabaseClient
         .from('registrations')
         .update({ status })
@@ -177,8 +180,23 @@
         return
       }
 
-      const reg = registrations.find(r => r.id === id)
       if (reg) reg.status = status
+
+      // 승인 시 event_settings 카운트 자동 증가
+      if (status === 'approved' && prevStatus !== 'approved' && reg && reg.event_date) {
+        const field = reg.gender === 'male' ? 'male_count' : 'female_count'
+        let setting = eventSettings[reg.event_date]
+        if (!setting) {
+          await supabaseClient.from('event_settings').insert({
+            event_date: reg.event_date, male_count: 0, female_count: 0, male_max: 24, female_max: 24
+          })
+          setting = { event_date: reg.event_date, male_count: 0, female_count: 0, male_max: 24, female_max: 24 }
+          eventSettings[reg.event_date] = setting
+        }
+        const newVal = (setting[field] || 0) + 1
+        setting[field] = newVal
+        await supabaseClient.from('event_settings').update({ [field]: newVal }).eq('event_date', reg.event_date)
+      }
 
       if (status === 'rejected') {
         render()

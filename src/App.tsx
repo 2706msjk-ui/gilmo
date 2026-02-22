@@ -387,17 +387,14 @@ function App() {
       {/* ===== 4-1. PARTY INTRO ===== */}
       <section className="section" id="intro">
         <h2 className="section-title">About</h2>
-        <p className="section-subtitle">말이 잘 통하는 사람들과<br />몰입하며 나누는 사당의 밤</p>
-
         <p className="intro-description">
-          억지스러운 텐션이나<br />
-          시끄러운 소음은 빼기로 했어요.<br /><br />
-          서로의 눈을 맞추며 나누는 대화,<br />
-          그 안에서 느껴지는 진짜 설렘.<br /><br />
-          결이 비슷한 사람들이 모여<br />
-          대화의 밀도를 채우는 시간.<br /><br />
-          MIDNIGHT IN SADANG에서<br />
-          당신의 새로운 인연을 만나보세요.
+          의미 없는 게임과 시끄러운 소음에 지치진 않으셨나요?<br /><br />
+          우리는 억지 텐션을 덜어내고<br />
+          서로의 대화에만 집중하도록 준비했습니다.<br /><br />
+          결이 맞는 사람들이 모여<br />
+          말이 통하는 즐거움을 나누는 시간.<br /><br />
+          이제 미드나잇 인 사당에서<br />
+          진짜 설레는 인연을 만나보세요!
         </p>
 
         <div className="intro-cards" ref={introRef}>
@@ -407,20 +404,27 @@ function App() {
             <h4 className="intro-card-label">외모 승인제</h4>
             <p>
               모두가 기다려온 검증된 만남<br /><br />
-              신청은 누구나 가능하지만, 참가는 세심한 승인을 거칩니다.<br /><br />
-              단순히 외적인 모습뿐만 아니라 파티에 어울리는 분위기까지 고려합니다<br /><br />
-              당신이 마주할 상대 또한 충분히 매력적인 분임을 약속합니다.
+              신청은 누구나 가능하지만,<br />
+              참가는 세심한 승인을 거칩니다.<br /><br />
+              외적 스타일은 물론, 공간에 어우러지는<br />
+              분위기까지 고려합니다.<br /><br />
+              당신이 마주할 상대 또한<br />
+              충분히 매력적인 분임을 약속합니다.
             </p>
           </div>
           <div className="intro-card stagger-child">
             <div className="intro-card-number">02</div>
             <h3>Deep Connection</h3>
-            <h4 className="intro-card-label">대화</h4>
+            <h4 className="intro-card-label">깊은 대화</h4>
             <p>
-              스쳐가는 인사 대신 깊게 스며드는 대화<br /><br />
-              얼굴만 보고 끝나는 자리가 아닙니다. 취향과 가치관이 연결되는 몰입을 경험하세요.<br /><br />
-              '미드나잇 스캔'으로 인연을 발견하고, '딥 로테이션'으로 밀도 있게 대화합니다.<br /><br />
-              더 깊은 이야기는 2부 자유 시간, 당신만의 속도로 이어가면 됩니다.
+              가벼운 인사 대신 깊은 대화.<br />
+              얼굴만 보고 끝나는 자리가 아닙니다.<br /><br />
+              테이블 내 'Focus Rotation'.<br />
+              가까운 거리에서 눈을 맞추며 대화하세요.<br /><br />
+              50분간의 충분한 대화 이후,<br />
+              'Total Rotation'으로 새로운 인연을 만납니다.<br /><br />
+              MIDNIGHT IN SADANG에서<br />
+              완벽한 대화의 속도를 경험하세요.
             </p>
           </div>
           <div className="intro-card stagger-child">
@@ -428,10 +432,14 @@ function App() {
             <h3>Intentional Choice</h3>
             <h4 className="intro-card-label">선택</h4>
             <p>
-              눈치 보지 말고 마음이 이끄는 대로<br /><br />
-              누구와 더 대화하고 싶나요? '1부 대화 신청'으로 서로의 호감을 확인하세요.<br /><br />
-              이어지는 '2부 자유 시간', 마음이 향하는 사람에게 집중할 시간입니다.<br /><br />
-              정해진 틀을 벗어나 이제 당신의 인연을 직접 디자인하세요.
+              눈치 보지 말고 마음이 이끄는 대로.<br />
+              이제 당신의 인연을 직접 디자인하세요.<br /><br />
+              11시, 'Midnight Signal'의 시간.<br />
+              호감을 확인하고 자유 매칭을 시작합니다.<br /><br />
+              이어지는 'After Party'.<br />
+              마음이 향하는 인연과 대화를 이어가세요.<br /><br />
+              당신의 선택이,<br />
+              Midnight에서의 인연으로 이어집니다.
             </p>
           </div>
         </div>
@@ -446,7 +454,7 @@ function App() {
         <div className="detail-table">
           <div className="detail-row">
             <div className="detail-label">파티 시간</div>
-            <div className="detail-value">1부 21:00 ~ 00:30 / 2부 00:30 ~ 02:30</div>
+            <div className="detail-value">1부 Main Party 21:00 ~ 00:30 / 2부 After Party 00:30 ~ 02:30</div>
           </div>
           <div className="detail-row">
             <div className="detail-label">제공 사항</div>
@@ -482,7 +490,7 @@ function App() {
       {/* ===== 4-3. CONDITIONS ===== */}
       <section className="section" id="conditions">
         <h2 className="section-title">Who</h2>
-        <p className="section-subtitle">매력적인 주인공을 찾습니다</p>
+
         <div className="divider" />
 
         <p className="condition-description">
@@ -515,50 +523,45 @@ function App() {
         <div className="divider" />
 
         <div className="timetable-part">
-          <h3 className="timetable-part-title">1부: 21:00 ~ 00:30</h3>
+          <h3 className="timetable-part-title">Main Party : 21:00 ~ 00:30</h3>
+          <div style={{ marginBottom: '32px' }} />
           <div className="timeline" ref={timetableRef}>
             <div className="timeline-item stagger-child">
               <div className="timeline-dot" />
-              <div className="timeline-time">21:00 - 21:20</div>
-              <div className="timeline-title">Midnight Scan</div>
-              <div className="timeline-desc">전원 대면 및 가벼운 눈인사. 오늘 밤을 함께할 모든 인연을 미리 확인하는 설레는 시작.</div>
-            </div>
-            <div className="timeline-item stagger-child">
-              <div className="timeline-dot" />
-              <div className="timeline-time">21:20 - 23:00</div>
+              <div className="timeline-time">21:00 - 23:00</div>
               <div className="timeline-title">Deep Table Rotation</div>
-              <div className="timeline-desc">[30분 대화 + 10분 휴식] 시스템. 넉넉한 시간 동안 서로의 가치관과 취향을 깊이 있게 알아가는 4:4 그룹 다이닝.</div>
+              <div className="timeline-desc">[50분 대화 + 10분 휴식] 시스템으로 운영됩니다. 첫 만남의 어색함을 넘어 서로의 가치관과 취향을 깊이 있게 알아가는 4:4 그룹 다이닝 시간입니다.</div>
             </div>
             <div className="timeline-item stagger-child">
               <div className="timeline-dot" />
               <div className="timeline-time">23:00 - 23:30</div>
               <div className="timeline-title">Midnight Signal</div>
-              <div className="timeline-desc">1부의 하이라이트. 용기 있는 자가 인연을 얻는 깜짝 호감 표시 및 시그널 이벤트 시간.</div>
+              <div className="timeline-desc">Main Party의 하이라이트! 마음에 머문 인연에게 당신의 시그널을 보내는 시간입니다. 용기 있는 선택이 새로운 시작을 만듭니다.</div>
             </div>
             <div className="timeline-item stagger-child">
               <div className="timeline-dot" />
               <div className="timeline-time">23:30 - 00:30</div>
               <div className="timeline-title">Impression & Final</div>
-              <div className="timeline-desc">1부의 마지막 테이블 대화. 못다 한 이야기는 2부 자유 시간으로 이어지는 감질맛 나는 마무리.</div>
+              <div className="timeline-desc">Main Party 마지막 테이블 대화. 못다 한 이야기는 After Party에서의 시간으로 이어집니다.</div>
             </div>
           </div>
         </div>
 
         <div className="timetable-part">
-          <h3 className="timetable-part-title">2부: 00:30 ~ 02:30</h3>
+          <h3 className="timetable-part-title">After Party : 00:30 ~ 02:30</h3>
           <p className="timetable-part-desc">탐색의 시간이 지나고, 이제 당신의 직관이 움직일 차례입니다.</p>
           <div className="timeline" ref={timetable2Ref}>
             <div className="timeline-item stagger-child">
               <div className="timeline-dot" />
               <div className="timeline-time">00:30 - 00:40</div>
               <div className="timeline-title">The Midnight Choice</div>
-              <div className="timeline-desc">1부에서 눈여겨본 인연을 향한 자유로운 자리 이동.</div>
+              <div className="timeline-desc">Main Party에서 눈여겨본 인연을 향한 자유로운 자리 이동.</div>
             </div>
             <div className="timeline-item stagger-child">
               <div className="timeline-dot" />
               <div className="timeline-time">00:40 - 02:30</div>
               <div className="timeline-title">Midnight Lounge</div>
-              <div className="timeline-desc">시간 제한 없는 깊은 몰입. 마음에 맞는 사람들과 사당의 밤을 온전히 즐기는 자유 네트워킹 시간.</div>
+              <div className="timeline-desc">시간 제한 없는 깊은 몰입.<br />마음에 맞는 인연들과 Midnight Party를 온전히 즐기는 자유 네트워킹 시간.</div>
             </div>
           </div>
         </div>
@@ -578,7 +581,7 @@ function App() {
             <strong>02.</strong> <strong>드레스코드 준수</strong><br />슬리퍼나 트레이닝복은 입장이 제한될 수 있어요.<br />당신의 매력을 가장 잘 보여줄 룩으로 만나요.
           </div>
           <div className="notice-item stagger-child">
-            <strong>03.</strong> <strong>매너 가이드</strong><br />무례한 언행이나 과도한 음주는 즉시 퇴장 조치됩니다.<br />매너가 매력의 시작임을 잊지 말아 주세요.
+            <strong>03.</strong> <strong>매너 가이드</strong><br />무례한 언행과 과도한 음주는 즉시 퇴장 조치됩니다.<br />매너가 매력의 시작임을 잊지 말아 주세요.
           </div>
           <div className="notice-item stagger-child">
             <strong>04.</strong> <strong>정확한 정보 입력</strong><br />신청 정보가 사실과 다를 경우 승인이 취소될 수 있습니다.
@@ -779,7 +782,7 @@ function App() {
                   </ul>
                 </div>
                 <p className="form-success-note">
-                  인연의 시작을 위해 이 화면을 캡처해 잠시만 기다려 주세요.
+                  인연의 시작을 위해 이 화면을 캡처 후 승인 안내를 기다려 주세요.
                 </p>
                 <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
               </>
