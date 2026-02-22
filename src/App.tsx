@@ -414,8 +414,8 @@ function App() {
             <h3>Selected Beauty</h3>
             <h4 className="intro-card-label">외모 승인제</h4>
             <p>
-              외적 스타일은 물론 공간에 어우러지는 분위기까지.
-              세심한 승인제로 수준 높은 만남을 보장합니다.
+              외적 스타일과 어우러지는 분위기까지
+              세심한 승인제로 검증된 만남을 보장합니다.
             </p>
           </div>
           <div className="intro-card stagger-child">
@@ -423,9 +423,9 @@ function App() {
             <h3>Deep Connection</h3>
             <h4 className="intro-card-label">깊은 대화</h4>
             <p>
-              'Focus Rotation'을 통한 눈맞춤 대화
               'Total Rotation'을 통한 새로운 만남
-              의미 없는 게임 대신 대화의 몰입감을 경험하세요.
+              'Focus Rotation'을 통한 눈맞춤 대화
+              밀도 있는 대화에 온전히 몰입해 보세요.
             </p>
           </div>
           <div className="intro-card stagger-child">
@@ -435,7 +435,7 @@ function App() {
             <p>
               'Midnight Signal'로 호감 확인 후,
               'After Party'로 이어지는 대화.
-              눈치 보지 말고 마음이 이끄는 대로 선택하세요.
+              마음이 이끄는 인연을 직접 선택해보세요!
             </p>
           </div>
         </div>
