@@ -934,6 +934,11 @@
   }
 
   /* About Cards */
+  .intro-cards {
+    max-width: 85%;
+    margin: 0 auto;
+  }
+
   .intro-card {
     padding: 20px 16px;
   }
@@ -964,6 +969,8 @@
   /* Conditions */
   .condition-cards {
     grid-template-columns: 1fr;
+    max-width: 85%;
+    margin: 0 auto 48px;
   }
 
   .condition-card {
