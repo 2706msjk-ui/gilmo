@@ -192,8 +192,8 @@ function App() {
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
       setTimeout(() => {
-        const firstErr = document.querySelector('.form-field .form-error')
-        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        const modal = document.querySelector('.modal-form')
+        if (modal) modal.scrollTo({ top: modal.scrollHeight, behavior: 'smooth' })
       }, 50)
       return
     }
@@ -1072,8 +1072,12 @@ function App() {
 
                 {formErrors.submit && <p className="form-error form-submit-error">{formErrors.submit}</p>}
 
+                <button className="form-submit-btn" onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? '신청 중...' : '신청하기'}
+                </button>
+
                 {Object.keys(formErrors).filter(k => k !== 'submit').length > 0 && (
-                  <div className="form-errors-summary">
+                  <div className="form-errors-summary" id="errors-summary">
                     <p>아래 항목을 확인해주세요:</p>
                     <ul>
                       {Object.entries(formErrors).filter(([k]) => k !== 'submit').map(([k, v]) => (
@@ -1082,10 +1086,6 @@ function App() {
                     </ul>
                   </div>
                 )}
-
-                <button className="form-submit-btn" onClick={handleSubmit} disabled={submitting}>
-                  {submitting ? '신청 중...' : '신청하기'}
-                </button>
                 <button className="modal-close" onClick={() => setModal(null)}>취소</button>
               </>
             )}
