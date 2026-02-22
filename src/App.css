@@ -71,18 +71,19 @@
 }
 
 .hero-description {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text-secondary);
   margin-top: 24px;
   line-height: 1.8;
-  font-style: italic;
+  letter-spacing: 1px;
 }
 
 .hero-sub {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text-secondary);
   margin-top: 12px;
   line-height: 1.8;
+  letter-spacing: 1px;
 }
 
 .hero-scroll {
@@ -907,33 +908,76 @@
 }
 
 @media (max-width: 640px) {
+  /* Hero */
+  .hero {
+    padding: 30px 16px;
+  }
+
   .hero-brand {
     font-size: 1.8rem;
     letter-spacing: 2px;
   }
 
   .hero-tagline {
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     letter-spacing: 1px;
+  }
+
+  .hero-description {
+    font-size: 0.85rem;
   }
 
   .hero-sub {
     font-size: 0.85rem;
   }
 
-  .condition-cards {
-    grid-template-columns: 1fr;
+  /* Sections */
+  .section {
+    padding: 60px 16px;
   }
 
   .section-title {
     font-size: 1.5rem;
   }
 
-  .apply-btn-fixed {
-    padding: 14px 36px;
-    font-size: 0.9rem;
+  /* About Cards */
+  .intro-card {
+    padding: 28px 20px;
   }
 
+  /* Timetable */
+  .timeline {
+    padding-left: 24px;
+  }
+
+  .timeline-dot {
+    left: -27px;
+    width: 10px;
+    height: 10px;
+  }
+
+  .timeline-time {
+    font-size: 0.95rem;
+  }
+
+  .timeline-title {
+    font-size: 0.95rem;
+  }
+
+  .timeline-desc {
+    font-size: 0.8rem;
+  }
+
+  /* Conditions */
+  .condition-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .condition-card {
+    padding: 20px 16px;
+  }
+
+  /* Details */
   .detail-row {
     flex-direction: column;
     gap: 4px;
@@ -941,6 +985,45 @@
 
   .detail-label {
     width: auto;
+  }
+
+  /* Notice */
+  .notice-item {
+    padding: 16px 16px;
+  }
+
+  /* Modal / Form */
+  .modal {
+    padding: 20px;
+  }
+
+  .modal h2 {
+    font-size: 1.1rem;
+  }
+
+  .form-photo-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .event-date-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-insta-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Apply Button */
+  .apply-btn-fixed {
+    padding: 14px 36px;
+    font-size: 0.9rem;
+  }
+
+  /* Bottom Spacer */
+  .bottom-spacer {
+    height: 70px;
   }
 }
 
