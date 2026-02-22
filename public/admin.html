@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MIDNIGHT IN SADANG - Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
@@ -25,8 +26,11 @@
     .admin-header h1 { color: #c9a55a; font-size: 16px; letter-spacing: 2px; }
     .admin-header .stats { display: flex; gap: 16px; font-size: 13px; color: #888; }
     .admin-header .stats span { color: #c9a55a; font-weight: 600; }
+    .header-btns { display: flex; gap: 8px; align-items: center; }
     .btn-logout { background: none; border: 1px solid #555; color: #999; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .btn-logout:hover { border-color: #c9a55a; color: #c9a55a; }
+    .btn-excel { background: none; border: 1px solid #4caf50; color: #4caf50; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .btn-excel:hover { background: rgba(76,175,80,0.15); }
 
     /* Filter Tabs */
     .filter-bar { padding: 16px 24px; display: flex; gap: 8px; border-bottom: 1px solid #1a1a1a; }
@@ -453,7 +457,10 @@
             승인 <span>${counts.approved}</span> |
             거절 <span>${counts.rejected}</span>
           </div>
-          <button class="btn-logout" onclick="logout()">로그아웃</button>
+          <div class="header-btns">
+            <button class="btn-excel" onclick="exportExcel()">엑셀 다운로드</button>
+            <button class="btn-logout" onclick="logout()">로그아웃</button>
+          </div>
         </div>
 
         <div class="filter-bar">
@@ -634,6 +641,42 @@
       if (confirm(`${label} 상태를 대기중으로 되돌리시겠습니까?`)) {
         undoStatus(id)
       }
+    }
+
+    // ===== Excel Export =====
+    function exportExcel() {
+      if (!registrations.length) { alert('데이터가 없습니다.'); return }
+
+      const statusMap = { pending: '대기중', approved: '승인', rejected: '거절' }
+      const rows = registrations.map(r => ({
+        '상태': statusMap[r.status] || '대기중',
+        '이름': r.name || '',
+        '성별': r.gender === 'male' ? '남' : '여',
+        '참가날짜': r.event_date || '',
+        '참여구분': r.participation_type || '',
+        '생년월일': r.birth_date || '',
+        '연락처': formatPhone(r.phone),
+        '거주지': r.location || '',
+        '직업': r.job || '',
+        '키': r.height || '',
+        '몸무게': r.weight || '',
+        '인스타그램': r.instagram_id || '',
+        '매력': r.charm || '',
+        '선호스타일': r.preferred_style || '',
+        '유입경로': r.referral_source || '',
+        'SMS발송': r.sms_sent ? 'O' : 'X',
+        '신청일시': formatDate(r.created_at),
+      }))
+
+      const ws = XLSX.utils.json_to_sheet(rows)
+      // 컬럼 너비 자동 조절
+      ws['!cols'] = Object.keys(rows[0]).map(k => ({ wch: Math.max(k.length * 2, 10) }))
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, '신청목록')
+
+      const today = new Date()
+      const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`
+      XLSX.writeFile(wb, `MIDNIGHT_신청목록_${dateStr}.xlsx`)
     }
 
     function updateSmsText(val) { smsText = val; }
