@@ -419,13 +419,13 @@
 
 .intro-card h3 {
   font-family: var(--font-en);
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .intro-card p {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 2;
   text-align: center;
