@@ -51,7 +51,7 @@
 
 .hero-brand {
   font-family: var(--font-en);
-  font-size: 4rem;
+  font-size: 4.5rem;
   font-weight: 900;
   letter-spacing: 6px;
   margin-bottom: 16px;
@@ -900,7 +900,7 @@
   }
 
   .hero-brand {
-    font-size: 5rem;
+    font-size: 5.5rem;
   }
 
   .section {
@@ -911,7 +911,7 @@
 @media (max-width: 640px) {
   /* Hero */
   .hero-brand {
-    font-size: 1.8rem;
+    font-size: 2rem;
     letter-spacing: 2px;
   }
 
@@ -1553,6 +1553,38 @@
 .form-submit-error {
   text-align: center;
   margin-top: 12px;
+}
+
+.form-errors-summary {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+.form-errors-summary p {
+  color: #f44336;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.form-errors-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.form-errors-summary li {
+  color: #ff8a80;
+  font-size: 0.8rem;
+  padding: 2px 0;
+  padding-left: 12px;
+  position: relative;
+}
+.form-errors-summary li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #f44336;
 }
 
 /* Success */

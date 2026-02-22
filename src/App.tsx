@@ -189,7 +189,14 @@ function App() {
   // Form submission
   const handleSubmit = async () => {
     const errors = validateForm()
-    if (Object.keys(errors).length > 0) { setFormErrors(errors); return }
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      setTimeout(() => {
+        const firstErr = document.querySelector('.form-field .form-error')
+        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 50)
+      return
+    }
     setSubmitting(true); setFormErrors({})
 
     try {
@@ -389,12 +396,8 @@ function App() {
         <h2 className="section-title">About</h2>
         <p className="intro-description">
           의미 없는 게임과 시끄러운 소음에 지치진 않으셨나요?<br /><br />
-          우리는 억지 텐션을 덜어내고<br />
-          서로의 대화에만 집중하도록 준비했습니다.<br /><br />
-          결이 맞는 사람들이 모여<br />
-          말이 통하는 즐거움을 나누는 시간.<br /><br />
-          이제 미드나잇 인 사당에서<br />
-          진짜 설레는 인연을 만나보세요!
+          미드나잇 파티는 억지 텐션을 덜어내고<br />
+          서로의 대화에만 집중하도록 준비했습니다.
         </p>
 
         <div className="intro-cards" ref={introRef}>
@@ -403,13 +406,8 @@ function App() {
             <h3>Selected Beauty</h3>
             <h4 className="intro-card-label">외모 승인제</h4>
             <p>
-              모두가 기다려온 검증된 만남<br /><br />
-              신청은 누구나 가능하지만,<br />
-              참가는 세심한 승인을 거칩니다.<br /><br />
-              외적 스타일은 물론, 공간에 어우러지는<br />
-              분위기까지 고려합니다.<br /><br />
-              당신이 마주할 상대 또한<br />
-              충분히 매력적인 분임을 약속합니다.
+              외적 스타일은 물론 공간에 어우러지는 분위기까지.<br /><br />
+              세심한 승인제로 수준 높은 만남을 보장합니다.
             </p>
           </div>
           <div className="intro-card stagger-child">
@@ -417,14 +415,12 @@ function App() {
             <h3>Deep Connection</h3>
             <h4 className="intro-card-label">깊은 대화</h4>
             <p>
-              가벼운 인사 대신 깊은 대화.<br />
-              얼굴만 보고 끝나는 자리가 아닙니다.<br /><br />
-              테이블 내 'Focus Rotation'.<br />
-              가까운 거리에서 눈을 맞추며 대화하세요.<br /><br />
-              50분간의 충분한 대화 이후,<br />
-              'Total Rotation'으로 새로운 인연을 만납니다.<br /><br />
-              MIDNIGHT IN SADANG에서<br />
-              완벽한 대화의 속도를 경험하세요.
+              'Focus Rotation'을<br />
+              통한 눈맞춤 대화<br />
+              'Total Rotation'을<br />
+              통한 새로운 만남<br /><br />
+              의미 없는 게임 대신 대화의<br />
+              몰입감을 경험하세요.
             </p>
           </div>
           <div className="intro-card stagger-child">
@@ -432,14 +428,11 @@ function App() {
             <h3>Intentional Choice</h3>
             <h4 className="intro-card-label">선택</h4>
             <p>
-              눈치 보지 말고 마음이 이끄는 대로.<br />
-              이제 당신의 인연을 직접 디자인하세요.<br /><br />
-              11시, 'Midnight Signal'의 시간.<br />
-              호감을 확인하고 자유 매칭을 시작합니다.<br /><br />
-              이어지는 'After Party'.<br />
-              마음이 향하는 인연과 대화를 이어가세요.<br /><br />
-              당신의 선택이,<br />
-              Midnight에서의 인연으로 이어집니다.
+              'Midnight Signal'로<br />
+              호감 확인 후,<br /><br />
+              'After Party'로 이어지는 대화.<br />
+              눈치 보지 말고 마음이<br />
+              이끄는 대로 선택하세요.
             </p>
           </div>
         </div>
@@ -454,7 +447,7 @@ function App() {
         <div className="detail-table">
           <div className="detail-row">
             <div className="detail-label">파티 시간</div>
-            <div className="detail-value">1부 Main Party 21:00 ~ 00:30 / 2부 After Party 00:30 ~ 02:30</div>
+            <div className="detail-value">Main Party 21:00 ~ 00:30 / After Party 00:30 ~ 02:30</div>
           </div>
           <div className="detail-row">
             <div className="detail-label">제공 사항</div>
@@ -775,7 +768,7 @@ function App() {
                 <div className="form-success-info">
                   <h4>입금 및 승인 안내</h4>
                   <ul>
-                    <li>신청 후 1시간 이내 입금 시 심사가 시작됩니다.</li>
+                    <li>신청 후 1시간 이내 본인계좌로 입금 시 심사가 시작됩니다.</li>
                     <li>카카오뱅크 0000-0000-0000 (000)</li>
                     <li>입금자명은 반드시 <strong>성함(핸드폰 뒷자리)</strong> 형태로 입력해 주세요. (ex. 0004885)</li>
                     <li>최종 미승인 시 결제 금액은 100% 전액 환불됩니다.</li>
@@ -1078,6 +1071,17 @@ function App() {
                 </div>
 
                 {formErrors.submit && <p className="form-error form-submit-error">{formErrors.submit}</p>}
+
+                {Object.keys(formErrors).filter(k => k !== 'submit').length > 0 && (
+                  <div className="form-errors-summary">
+                    <p>아래 항목을 확인해주세요:</p>
+                    <ul>
+                      {Object.entries(formErrors).filter(([k]) => k !== 'submit').map(([k, v]) => (
+                        <li key={k}>{v}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <button className="form-submit-btn" onClick={handleSubmit} disabled={submitting}>
                   {submitting ? '신청 중...' : '신청하기'}

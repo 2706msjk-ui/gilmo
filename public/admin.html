@@ -62,6 +62,8 @@
     .btn-reject { background: transparent; border: 1px solid #555; color: #999; }
     .btn-reject:hover { border-color: #f44336; color: #f44336; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-undo { background: transparent; border: 1px solid #ff9800; color: #ff9800; }
+    .btn-undo:hover { background: rgba(255,152,0,0.15); }
 
     /* SMS Modal */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
@@ -206,6 +208,37 @@
     // ===== Approve Only =====
     async function approveOnly(id) {
       await updateStatus(id, 'approved')
+      render()
+    }
+
+    // ===== Undo Status (되돌리기) =====
+    async function undoStatus(id) {
+      const reg = registrations.find(r => r.id === id)
+      if (!reg) return
+      const prevStatus = reg.status
+
+      const { error } = await supabaseClient
+        .from('registrations')
+        .update({ status: 'pending' })
+        .eq('id', id)
+
+      if (error) {
+        alert('되돌리기 실패: ' + error.message)
+        return
+      }
+
+      // 승인 → 대기 전환 시 event_settings 카운트 감소
+      if (prevStatus === 'approved' && reg.event_date) {
+        const field = reg.gender === 'male' ? 'male_count' : 'female_count'
+        const setting = eventSettings[reg.event_date]
+        if (setting) {
+          const newVal = Math.max(0, (setting[field] || 0) - 1)
+          setting[field] = newVal
+          await supabaseClient.from('event_settings').update({ [field]: newVal }).eq('event_date', reg.event_date)
+        }
+      }
+
+      reg.status = 'pending'
       render()
     }
 
@@ -504,8 +537,11 @@
                 <button class="btn btn-approve-only" onclick="approveOnly('${reg.id}')">승인</button>
                 <button class="btn btn-approve" onclick="openSmsModal(registrations.find(r=>r.id==='${reg.id}'))">승인 + 문자</button>
                 <button class="btn btn-reject" onclick="rejectReg('${reg.id}')">거절</button>
-              ` : status === 'approved' && !reg.sms_sent ? `
-                <button class="btn btn-approve" onclick="openSmsModal(registrations.find(r=>r.id==='${reg.id}'))">문자 발송</button>
+              ` : status === 'approved' ? `
+                ${!reg.sms_sent ? `<button class="btn btn-approve" onclick="openSmsModal(registrations.find(r=>r.id==='${reg.id}'))">문자 발송</button>` : ''}
+                <button class="btn btn-undo" onclick="confirmUndo('${reg.id}', '승인')">되돌리기</button>
+              ` : status === 'rejected' ? `
+                <button class="btn btn-undo" onclick="confirmUndo('${reg.id}', '거절')">되돌리기</button>
               ` : ''}
             </div>
           </div>
@@ -591,6 +627,12 @@
     function rejectReg(id) {
       if (confirm('이 신청을 거절하시겠습니까?')) {
         updateStatus(id, 'rejected')
+      }
+    }
+
+    function confirmUndo(id, label) {
+      if (confirm(`${label} 상태를 대기중으로 되돌리시겠습니까?`)) {
+        undoStatus(id)
       }
     }
 
