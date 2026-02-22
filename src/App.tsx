@@ -163,11 +163,19 @@ function App() {
     if (!formData.name.trim()) errors.name = '성함을 입력해주세요'
     if (!formData.gender) errors.gender = '성별을 선택해주세요'
     if (!formData.eventDate) errors.eventDate = '참가 희망 날짜를 선택해주세요'
-    if (!formData.birthDate || formData.birthDate.length !== 8) errors.birthDate = '생년월일 8자리를 입력해주세요'
-    if (formData.birthDate.length === 8 && formData.gender) {
+    if (!formData.birthDate || formData.birthDate.length !== 8) {
+      errors.birthDate = '생년월일 8자리를 입력해주세요'
+    } else {
       const y = parseInt(formData.birthDate.slice(0, 4))
-      if (formData.gender === 'male' && (y < 1990 || y > 2004)) errors.birthDate = '남성은 90~04년생만 신청 가능합니다'
-      if (formData.gender === 'female' && (y < 1992 || y > 2005)) errors.birthDate = '여성은 92~05년생만 신청 가능합니다'
+      const m = parseInt(formData.birthDate.slice(4, 6))
+      const d = parseInt(formData.birthDate.slice(6, 8))
+      if (y < 1980 || y > 2010 || m < 1 || m > 12 || d < 1 || d > 31) {
+        errors.birthDate = '올바른 생년월일을 입력해주세요'
+      } else if (formData.gender === 'male' && (y < 1990 || y > 2004)) {
+        errors.birthDate = '남성은 90~04년생만 신청 가능합니다'
+      } else if (formData.gender === 'female' && (y < 1992 || y > 2005)) {
+        errors.birthDate = '여성은 92~05년생만 신청 가능합니다'
+      }
     }
     const phoneDigits = formData.phone.replace(/\D/g, '')
     if (phoneDigits.length < 10) errors.phone = '올바른 연락처를 입력해주세요'
