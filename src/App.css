@@ -909,10 +909,6 @@
 
 @media (max-width: 640px) {
   /* Hero */
-  .hero {
-    padding: 30px 16px;
-  }
-
   .hero-brand {
     font-size: 1.8rem;
     letter-spacing: 2px;
@@ -932,10 +928,6 @@
   }
 
   /* Sections */
-  .section {
-    padding: 60px 16px;
-  }
-
   .section-title {
     font-size: 1.5rem;
   }
