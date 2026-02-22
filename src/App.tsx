@@ -435,7 +435,7 @@ function App() {
             <p>
               'Midnight Signal'로 호감 확인 후,
               'After Party'로 이어지는 대화.
-              마음이 이끄는 인연을 직접 선택해보세요!
+              마음이 이끄는 인연을 직접 선택해 보세요!
             </p>
           </div>
         </div>
