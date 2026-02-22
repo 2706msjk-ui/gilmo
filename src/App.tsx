@@ -779,7 +779,7 @@ function App() {
                   </ul>
                 </div>
                 <p className="form-success-note">
-                  인연의 시작을 위해 이 화면을 캡처 후 승인 안내를 기다려 주세요.
+                  인연의 시작을 위해 이 화면을 캡처 후<br />승인 안내를 기다려 주세요.
                 </p>
                 <button className="modal-close" onClick={() => setModal(null)}>닫기</button>
               </>
