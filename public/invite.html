@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIDNIGHT IN SADANG - Invitation</title>
+  <meta name="description" content="MIDNIGHT IN SADANG 디지털 초대장" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       ★ 수정 가이드 ★
+       아래 내용은 HTML 본문에서 직접 수정하세요:
+       - 날짜: "2026년 3월 14일 (토)" 검색 후 변경
+       - 장소: "서울 사당역 도보 5분" 검색 후 변경
+       - 지도 링크: "여기에_지도_링크" 검색 후 변경
+       - 사진: "photo-placeholder" 클래스를 가진 div를
+               <img src="사진경로"> 로 교체
+       ============================================ */
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .invite-container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ===== Hero ===== */
+    .hero {
+      text-align: center;
+      padding: 60px 20px 40px;
+      position: relative;
+    }
+
+    .hero-label {
+      font-size: 0.7rem;
+      letter-spacing: 6px;
+      color: #c9a55a;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .hero-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #d4b06a, #c9a55a, #a8884a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .hero-sub {
+      font-size: 0.85rem;
+      color: #888;
+      letter-spacing: 4px;
+      font-weight: 300;
+    }
+
+    .hero-photo {
+      margin-top: 32px;
+    }
+
+    /* ===== Section ===== */
+    .inv-section {
+      padding: 40px 0;
+    }
+
+    .inv-section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: #c9a55a;
+      text-align: center;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .inv-section-subtitle {
+      font-size: 0.75rem;
+      color: #666;
+      text-align: center;
+      letter-spacing: 2px;
+      margin-bottom: 24px;
+    }
+
+    .divider {
+      width: 40px;
+      height: 1px;
+      background: #c9a55a;
+      margin: 0 auto 32px;
+    }
+
+    /* ===== Card ===== */
+    .inv-card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 28px 24px;
+      margin-bottom: 16px;
+    }
+
+    .inv-card-label {
+      font-size: 0.7rem;
+      color: #c9a55a;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .inv-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .inv-card-text {
+      font-size: 0.85rem;
+      color: #aaa;
+      line-height: 1.7;
+    }
+
+    /* ===== Date & Time ===== */
+    .date-display {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .date-main {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .date-day {
+      font-size: 0.85rem;
+      color: #c9a55a;
+      letter-spacing: 2px;
+    }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .time-card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .time-card-name {
+      font-size: 0.7rem;
+      color: #c9a55a;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .time-card-time {
+      font-size: 0.95rem;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ===== Location ===== */
+    .location-info {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .location-name {
+      font-size: 1rem;
+      color: #fff;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .location-address {
+      font-size: 0.85rem;
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .map-btn {
+      display: inline-block;
+      padding: 12px 32px;
+      background: transparent;
+      border: 1px solid #c9a55a;
+      color: #c9a55a;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+      margin-top: 16px;
+    }
+
+    .map-btn:hover {
+      background: rgba(201, 165, 90, 0.1);
+    }
+
+    .location-photo {
+      margin-top: 24px;
+    }
+
+    /* ===== Dress Code ===== */
+    .dresscode-display {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .dresscode-main {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .dresscode-desc {
+      font-size: 0.85rem;
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .dresscode-photos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    /* ===== Timetable ===== */
+    .timetable-part-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: #c9a55a;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+    }
+
+    .tl-time {
+      min-width: 90px;
+      font-size: 0.8rem;
+      color: #c9a55a;
+      font-weight: 600;
+      padding-top: 2px;
+    }
+
+    .tl-content {
+      flex: 1;
+      border-left: 1px solid #333;
+      padding-left: 16px;
+    }
+
+    .tl-title {
+      font-size: 0.9rem;
+      color: #fff;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .tl-desc {
+      font-size: 0.8rem;
+      color: #888;
+      line-height: 1.6;
+    }
+
+    .timetable-gap {
+      height: 32px;
+    }
+
+    /* ===== Checklist ===== */
+    .checklist {
+      list-style: none;
+    }
+
+    .checklist li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+
+    .checklist li:last-child {
+      border-bottom: none;
+    }
+
+    .check-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid #c9a55a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #c9a55a;
+      font-size: 11px;
+    }
+
+    /* ===== Notice ===== */
+    .notice-list {
+      list-style: none;
+    }
+
+    .notice-list li {
+      position: relative;
+      padding: 10px 0 10px 16px;
+      font-size: 0.8rem;
+      color: #999;
+      line-height: 1.6;
+    }
+
+    .notice-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 16px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #c9a55a;
+    }
+
+    /* ===== Contact ===== */
+    .contact-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 10px;
+      color: #ccc;
+      text-decoration: none;
+      font-size: 0.8rem;
+      transition: border-color 0.3s;
+    }
+
+    .contact-link:hover {
+      border-color: #c9a55a;
+    }
+
+    .contact-link svg {
+      width: 18px;
+      height: 18px;
+      fill: #c9a55a;
+    }
+
+    /* ===== Footer ===== */
+    .inv-footer {
+      text-align: center;
+      padding: 48px 20px 60px;
+      border-top: 1px solid #1a1a1a;
+      margin-top: 20px;
+    }
+
+    .inv-footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: #c9a55a;
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .inv-footer-text {
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    /* ===== Photo Placeholder ===== */
+    .photo-placeholder {
+      border: 2px dashed #333;
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      color: #444;
+      font-size: 0.8rem;
+      background: #0f0f0f;
+    }
+
+    .photo-placeholder-sm {
+      border: 2px dashed #333;
+      border-radius: 10px;
+      padding: 30px 16px;
+      text-align: center;
+      color: #444;
+      font-size: 0.75rem;
+      background: #0f0f0f;
+    }
+
+    .photo-placeholder img,
+    .photo-placeholder-sm img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    /* ===== Animations ===== */
+    .fade-section {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .fade-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 400px) {
+      .hero-brand {
+        font-size: 1.7rem;
+        letter-spacing: 2px;
+      }
+
+      .date-main {
+        font-size: 1.5rem;
+      }
+
+      .time-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dresscode-photos {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-links {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .tl-time {
+        min-width: 70px;
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="invite-container">
+
+    <!-- ===== HERO ===== -->
+    <div class="hero fade-section">
+      <div class="hero-label">Digital Invitation</div>
+      <h1 class="hero-brand">MIDNIGHT IN SADANG</h1>
+      <p class="hero-sub">당신을 초대합니다</p>
+
+      <!-- ★ 히어로 사진: 아래 div를 <img src="사진경로" style="width:100%;border-radius:12px;" /> 로 교체 -->
+      <div class="hero-photo">
+        <div class="photo-placeholder">파티 분위기 사진 추가<br><br>권장 사이즈: 가로 520px</div>
+      </div>
+    </div>
+
+    <!-- ===== DATE & TIME ===== -->
+    <div class="inv-section fade-section">
+      <div class="inv-section-title">Date & Time</div>
+      <div class="inv-section-subtitle">일시</div>
+      <div class="divider"></div>
+
+      <!-- ★ 날짜 수정 -->
+      <div class="date-display">
+        <div class="date-main">3. 14</div>
+        <div class="date-day">2026년 3월 14일 토요일</div>
+      </div>
+
+      <div class="time-grid">
+        <div class="time-card">
+          <div class="time-card-name">MAIN PARTY</div>
+          <div class="time-card-time">21:00 ~ 00:30</div>
+        </div>
+        <div class="time-card">
+          <div class="time-card-name">AFTER PARTY</div>
+          <div class="time-card-time">00:30 ~ 02:30</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LOCATION ===== -->
+    <div class="inv-section fade-section">
+      <div class="inv-section-title">Location</div>
+      <div class="inv-section-subtitle">장소</div>
+      <div class="divider"></div>
+
+      <!-- ★ 장소 수정 -->
+      <div class="location-info">
+        <div class="location-name">사당역 도보 5분</div>
+        <div class="location-address">서울시 OO구 OO로 OO길 OO<br>상세 주소</div>
+        <!-- ★ 지도 링크 수정 -->
+        <a href="#여기에_지도_링크" class="map-btn" target="_blank">지도 보기 →</a>
+      </div>
+
+      <!-- ★ 장소 사진: 아래 div를 <img> 로 교체 -->
+      <div class="location-photo">
+        <div class="photo-placeholder">장소 사진 추가<br><br>매장 외관 또는 내부 사진</div>
+      </div>
+    </div>
+
+    <!-- ===== DRESS CODE ===== -->
+    <div class="inv-section fade-section">
+      <div class="inv-section-title">Dress Code</div>
+      <div class="inv-section-subtitle">복장 안내</div>
+      <div class="divider"></div>
+
+      <div class="dresscode-display">
+        <div class="dresscode-main">Black or White</div>
+        <div class="dresscode-desc">본인의 매력을 가장 잘 보여주는 스타일</div>
+      </div>
+
+      <!-- ★ 드레스코드 예시 사진: 아래 div를 <img> 로 교체 -->
+      <div class="dresscode-photos">
+        <div class="photo-placeholder-sm">남성 예시 사진</div>
+        <div class="photo-placeholder-sm">여성 예시 사진</div>
+      </div>
+    </div>
+
+    <!-- ===== TIMETABLE ===== -->
+    <div class="inv-section fade-section">
+      <div class="inv-section-title">Timetable</div>
+      <div class="inv-section-subtitle">파티 진행 순서</div>
+      <div class="divider"></div>
+
+      <div class="timetable-part-title">Main Party : 21:00 ~ 00:30</div>
+
+      <div class="timeline-item">
+        <div class="tl-time">21:00 - 23:00</div>
+        <div class="tl-content">
+          <div class="tl-title">Deep Table Rotation</div>
+          <div class="tl-desc">[50분 대화 + 10분 휴식] 시스템으로 운영됩니다. 첫 만남의 어색함을 넘어 서로의 가치관과 취향을 깊이 있게 알아가는 4:4 그룹 다이닝 시간입니다.</div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">23:00 - 23:30</div>
+        <div class="tl-content">
+          <div class="tl-title">Midnight Signal</div>
+          <div class="tl-desc">Main Party의 하이라이트! 마음에 머문 인연에게 당신의 시그널을 보내는 시간입니다.</div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">23:30 - 00:30</div>
+        <div class="tl-content">
+          <div class="tl-title">Impression & Final</div>
+          <div class="tl-desc">Main Party 마지막 테이블 대화. 못다 한 이야기는 After Party에서의 시간으로 이어집니다.</div>
+        </div>
+      </div>
+
+      <div class="timetable-gap"></div>
+
+      <div class="timetable-part-title">After Party : 00:30 ~ 02:30</div>
+
+      <div class="timeline-item">
+        <div class="tl-time">00:30 - 00:40</div>
+        <div class="tl-content">
+          <div class="tl-title">The Midnight Choice</div>
+          <div class="tl-desc">Main Party에서 눈여겨본 인연을 향한 자유로운 자리 이동.</div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">00:40 - 02:30</div>
+        <div class="tl-content">
+          <div class="tl-title">Midnight Lounge</div>
+          <div class="tl-desc">시간 제한 없는 깊은 몰입.<br>마음에 맞는 인연들과 Midnight Party를 온전히 즐기는 자유 네트워킹 시간.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHECKLIST ===== -->
+    <div class="inv-section fade-section">
+      <div class="inv-section-title">Checklist</div>
+      <div class="inv-section-subtitle">준비 사항</div>
+      <div class="divider"></div>
+
+      <ul class="checklist">
+        <li><span class="check-icon">✓</span>신분증 필수 (실물 또는 모바일)</li>
+        <li><span class="check-icon">✓</span>10분 전 도착 권장</li>
+        <li><span class="check-icon">✓</span>정시 입장 필수 (지연 시 참여 제한)</li>
+        <li><span class="check-icon">✓</span>드레스코드 준수 (Black or White)</li>
+      </ul>
+    </div>
+
+    <!-- ===== NOTICE ===== -->
+    <div class="inv-section fade-section">
+      <div class="inv-section-title">Notice</div>
+      <div class="inv-section-subtitle">유의사항</div>
+      <div class="divider"></div>
+
+      <ul class="notice-list">
+        <li>무례한 언행과 과도한 음주는 즉시 퇴장 조치됩니다.</li>
+        <li>참가자 간 연락처 교환은 자유이나, 강요는 금지됩니다.</li>
+        <li>타 참가자의 동의 없는 사진 및 영상 촬영은 금지됩니다.</li>
+        <li>개인 소지품은 본인이 관리하며, 분실에 대한 책임은 지지 않습니다.</li>
+      </ul>
+    </div>
+
+    <!-- ===== CONTACT ===== -->
+    <div class="inv-section fade-section">
+      <div class="inv-section-title">Contact</div>
+      <div class="inv-section-subtitle">문의</div>
+      <div class="divider"></div>
+
+      <div class="contact-links">
+        <a href="https://www.instagram.com/midnight_in_sadang" class="contact-link" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          Instagram
+        </a>
+        <!-- ★ 카카오톡 링크 수정 -->
+        <a href="#" class="contact-link" target="_blank">
+          <svg viewBox="0 0 24 24"><path d="M12 3c-5.0 0-9 3.4-9 7.6 0 2.7 1.8 5.1 4.5 6.5-.2.7-.7 2.5-.8 2.9-.1.5.2.5.4.3.1-.1 2.1-1.4 3-2.1.6.1 1.2.1 1.9.1 5 0 9-3.4 9-7.6S17 3 12 3z"/></svg>
+          KakaoTalk
+        </a>
+      </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="inv-footer fade-section">
+      <div class="inv-footer-brand">MIDNIGHT IN SADANG</div>
+      <div class="inv-footer-text">당신의 설렘이 시작되는 곳</div>
+    </div>
+
+  </div>
+
+  <!-- ===== Scroll Animation ===== -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible')
+        }
+      })
+    }, { threshold: 0.15 })
+
+    document.querySelectorAll('.fade-section').forEach(el => observer.observe(el))
+  </script>
+
+</body>
+</html>
